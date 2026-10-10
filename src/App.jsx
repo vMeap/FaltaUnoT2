@@ -3,6 +3,7 @@ import initialMatches from './data/initialMatches.json'
 import AlertMessage from './components/AlertMessage.jsx'
 import CreateMatchModal from './components/CreateMatchModal.jsx'
 import MyMatchesPanel from './components/MyMatchesPanel.jsx'
+import WeatherBadge from './components/WeatherBadge.jsx'
 import './styles.css'
 
 const MATCHES_KEY = 'faltauno.matches.v1'
@@ -105,6 +106,7 @@ function App() {
                     <div className="d-flex justify-content-between align-items-center mb-3"><span className="sport-icon" aria-hidden="true">{match.sport === 'Fútbol' ? 'F' : match.sport === 'Pádel' ? 'P' : 'B'}</span><span className="badge rounded-pill text-bg-light">{match.level}</span></div>
                     <h3 className="h5 fw-bold">{match.sport}</h3><p className="mb-1 text-secondary">{match.location}</p>
                     <p className="small text-secondary">{new Date(`${match.date}T12:00:00`).toLocaleDateString('es-CL')} · {match.time} hrs</p>
+                    <WeatherBadge latitude={match.latitude} longitude={match.longitude} date={match.date} time={match.time} />
                     <p className="fw-semibold mt-auto mb-3">{match.slots > 0 ? `Faltan ${match.slots} ${match.slots === 1 ? 'jugador' : 'jugadores'}` : 'Partido completo'}</p>
                     <button className={`btn rounded-pill ${joined ? 'btn-outline-danger' : 'btn-primary'}`} disabled={match.slots === 0 && !joined} onClick={() => joined ? cancelMatch(match.id) : joinMatch(match.id)}>{joined ? 'Dar de baja' : match.slots === 0 ? 'Sin cupos' : 'Yo apaño'}</button>
                   </div></article>
