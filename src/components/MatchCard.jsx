@@ -1,3 +1,5 @@
+import WeatherBadge from './WeatherBadge.jsx'
+
 function MatchCard({ match, joined, onJoin, onCancel }) {
     const date = new Date(`${match.date}T12:00:00`).toLocaleDateString('es-CL')
     const full = match.slots <= 0
@@ -38,6 +40,13 @@ function MatchCard({ match, joined, onJoin, onCancel }) {
                 <p className="small text-secondary">
                     {date} · {match.time} hrs
                 </p>
+
+                <WeatherBadge
+                    latitude={match.latitude}
+                    longitude={match.longitude}
+                    date={match.date}
+                    time={match.time}
+                />
 
                 <p className="fw-semibold mt-auto mb-3">
                     {full
