@@ -256,7 +256,14 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 
 ### Jordan: base React e interacciones
 
-Pendiente.
+| Elemento | Detalle |
+|---|---|
+| Herramienta | Codex (OpenAI). |
+| Propósito | Apoyar la migración del frontend a React, organizar la estructura inicial y desarrollar las interacciones asignadas. También se consultaron dudas sobre Git, ramas y Pull Requests. |
+| Consulta representativa | “Recuerda que soy Jordan, así que haremos todo lo que es parte de mí”, junto con el frontend anterior, la pauta y el reparto de responsabilidades. |
+| Resultado | Se obtuvo una base con React, Vite y Bootstrap, además de código para gestionar inscripciones, cancelaciones, creación de partidos y persistencia con `localStorage`. La IA también apoyó la resolución del conflicto entre los componentes del feed y el indicador del clima. |
+| Modificación humana | Se definió el alcance de la participación de Jordan y se ajustó el reparto del equipo para asumir la base React. Se configuró el repositorio remoto, se publicaron los cambios y se gestionaron los Pull Requests. Durante la integración, se proporcionó el conflicto y se coordinó la combinación de los aportes del equipo. |
+| Aprendizaje | Se trabajó con estado React, props, formularios controlados y actualizaciones inmutables. También se aprendió el propósito de las ramas `feature/*`, `develop` y `main`, y cómo integrar contribuciones mediante Pull Requests. |
 
 ### Kevin: diseño, feed, búsqueda y filtros
 
