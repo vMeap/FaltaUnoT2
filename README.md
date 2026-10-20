@@ -267,7 +267,14 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 
 ### Kevin: diseño, feed, búsqueda y filtros
 
-Pendiente.
+| Elemento | Detalle |
+| --- | --- |
+| Herramienta | ChatGPT (OpenAI). |
+| Propósito | Diseño de la interfaz visual, estructuración de la grilla del feed, desarrollo de la barra de búsqueda y filtros reactivos, además de componentes de presentación (tarjetas de partidos y estados vacíos). |
+| Consulta representativa | "Soy Kevin, ayúdame a desarrollar los componentes del Feed, las tarjetas de partido y los filtros con búsqueda en tiempo real en React, asegurando un diseño responsivo y buenas prácticas de estado." |
+| Resultado | Se obtuvo la estructura de componentes para listar partidos, la lógica de filtrado acumulativo (búsqueda por texto, deporte o comuna) y el diseño de las tarjetas con Bootstrap y CSS, junto con vistas alternativas cuando no hay resultados (*empty states*). |
+| Modificación humana | Se corrigió la implementación para usar estado derivado en tiempo de render en vez de duplicar estados en memoria, evitando desincronizaciones con las inscripciones. Se asignaron `keys` únicas para la reconciliación del Virtual DOM, se ajustaron los estilos responsivos y se integró con el estado global de `App.jsx`. |
+| Aprendizaje | Se profundizó en estado derivado vs. estado redundante, inmutabilidad con métodos funcionales (`filter`, `map`), optimización de renderizado en listas mediante Virtual DOM y diseño de interfaces responsivas y accesibles. |
 
 ## Limitaciones conocidas
 
