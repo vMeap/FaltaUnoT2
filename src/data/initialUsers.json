@@ -1,0 +1,31 @@
+[
+  {
+    "id": "user-1",
+    "name": "Kevin",
+    "email": "kevin@faltauno.cl",
+    "password": "123456",
+    "favoriteSport": "Fútbol"
+  },
+  {
+    "id": "user-2",
+    "name": "Matías Rojas",
+    "email": "matias@faltauno.cl",
+    "password": "123456",
+    "favoriteSport": "Fútbol"
+  },
+  {
+    "id": "user-3",
+    "name": "Camila Soto",
+    "email": "camila@faltauno.cl",
+    "password": "123456",
+    "favoriteSport": "Pádel"
+  },
+  {
+    "id": "user-4",
+    "name": "Diego Morales",
+    "email": "diego@faltauno.cl",
+    "password": "123456",
+    "favoriteSport": "Básquetbol"
+  }
+]
+

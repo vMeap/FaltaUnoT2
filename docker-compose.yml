@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: faltauno-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-faltauno}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-faltauno123}
+      POSTGRES_DB: ${POSTGRES_DB:-faltauno_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-faltauno} -d ${POSTGRES_DB:-faltauno_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    container_name: faltauno-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+  backend:
+    build:
+      context: ./backend
+    container_name: faltauno-backend
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      CORS_ORIGIN: "*"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-faltauno}:${POSTGRES_PASSWORD:-faltauno123}@postgres:5432/${POSTGRES_DB:-faltauno_db}
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-faltauno_nosql}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+
+  frontend:
+    build:
+      context: .
+    container_name: faltauno-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  mongodata:
+
