@@ -1,4 +1,19 @@
-function MatchCard({ match, joined, onJoin, onCancel }) {
+import { useEffect, useState } from 'react'
+import { fetchWeather } from '../services/api.js'
+
+function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
+    const [temperature, setTemperature] = useState(null)
+
+    useEffect(() => {
+        fetchWeather(match.latitude, match.longitude)
+            .then((weather) => {
+                if (weather && weather.temperature !== undefined) {
+                    setTemperature(Math.round(weather.temperature))
+                }
+            })
+            .catch(() => {})
+    }, [match.latitude, match.longitude])
+
     const date = new Date(`${match.date}T12:00:00`).toLocaleDateString('es-CL')
     const full = match.slots <= 0
 
@@ -26,9 +41,17 @@ function MatchCard({ match, joined, onJoin, onCancel }) {
                         {match.sport.charAt(0)}
                     </span>
 
-                    <span className="badge rounded-pill text-bg-light">
-                        {match.level}
-                    </span>
+                    <div className="d-flex align-items-center gap-2">
+                        {temperature !== null && (
+                            <span className="badge rounded-pill text-bg-info">
+                                🌤️ {temperature}°C
+                            </span>
+                        )}
+
+                        <span className="badge rounded-pill text-bg-light">
+                            {match.level}
+                        </span>
+                    </div>
                 </div>
 
                 <h3 className="h5 fw-bold">{match.sport}</h3>
@@ -53,6 +76,23 @@ function MatchCard({ match, joined, onJoin, onCancel }) {
                 >
                     {buttonText}
                 </button>
+
+                <div className="d-flex justify-content-end gap-3 mt-2 pt-2 border-top">
+                    <button
+                        type="button"
+                        className="btn btn-link btn-sm text-secondary p-0 text-decoration-none"
+                        onClick={() => onEdit(match)}
+                    >
+                        Editar
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-link btn-sm text-danger p-0 text-decoration-none"
+                        onClick={() => onDelete(match.id)}
+                    >
+                        Eliminar
+                    </button>
+                </div>
             </div>
         </article>
     )
