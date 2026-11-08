@@ -1,0 +1,10 @@
+.weather-badge { margin: 0 0 1rem; padding: .6rem .8rem; border: 1px solid #e5ece7; border-radius: .8rem; color: #1d2c26; background: #f4f7f4; font-size: .875rem; line-height: 1.35; }
+.weather-badge p { margin: 0; }
+.weather-badge-main strong { margin-right: .35rem; }
+.weather-badge-details { display: flex; flex-wrap: wrap; gap: .1rem .75rem; margin-top: .15rem; color: #64756c; font-size: .8rem; }
+.weather-badge-details a { text-decoration: underline; }
+.weather-badge-muted { color: #64756c; }
+.weather-badge-loading { color: #64756c; animation: weather-badge-pulse 1.2s ease-in-out infinite; }
+.weather-badge-error { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; border-color: #f1c9cd; color: #842029; background: #fdf1f2; }
+@keyframes weather-badge-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .weather-badge-loading { animation: none; } }

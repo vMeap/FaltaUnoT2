@@ -1,19 +1,6 @@
-import { useEffect, useState } from 'react'
-import { fetchWeather } from '../services/api.js'
+import WeatherBadge from './WeatherBadge.jsx'
 
 function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
-    const [temperature, setTemperature] = useState(null)
-
-    useEffect(() => {
-        fetchWeather(match.latitude, match.longitude)
-            .then((weather) => {
-                if (weather && weather.temperature !== undefined) {
-                    setTemperature(Math.round(weather.temperature))
-                }
-            })
-            .catch(() => {})
-    }, [match.latitude, match.longitude])
-
     const date = new Date(`${match.date}T12:00:00`).toLocaleDateString('es-CL')
     const full = match.slots <= 0
 
@@ -41,17 +28,9 @@ function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
                         {match.sport.charAt(0)}
                     </span>
 
-                    <div className="d-flex align-items-center gap-2">
-                        {temperature !== null && (
-                            <span className="badge rounded-pill text-bg-info">
-                                🌤️ {temperature}°C
-                            </span>
-                        )}
-
-                        <span className="badge rounded-pill text-bg-light">
-                            {match.level}
-                        </span>
-                    </div>
+                    <span className="badge rounded-pill text-bg-light">
+                        {match.level}
+                    </span>
                 </div>
 
                 <h3 className="h5 fw-bold">{match.sport}</h3>
@@ -61,6 +40,13 @@ function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
                 <p className="small text-secondary">
                     {date} · {match.time} hrs
                 </p>
+
+                <WeatherBadge
+                    latitude={match.latitude}
+                    longitude={match.longitude}
+                    date={match.date}
+                    time={match.time}
+                />
 
                 <p className="fw-semibold mt-auto mb-3">
                     {full
