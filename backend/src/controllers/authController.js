@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import {
     pool,
-    pgAvailable,
+    mysqlAvailable,
     logsCollection,
     localUsers,
     localLogs,
@@ -19,12 +19,12 @@ export async function login(req, res) {
         const cleanEmail = email.trim().toLowerCase()
         let user = null
 
-        if (pgAvailable) {
-            const result = await pool.query(
-                'SELECT id, name, email, password FROM users WHERE LOWER(email) = $1',
+        if (mysqlAvailable) {
+            const [rows] = await pool.query(
+                'SELECT id, name, email, password FROM users WHERE LOWER(email) = ?',
                 [cleanEmail]
             )
-            user = result.rows[0]
+            user = rows[0]
         } else {
             user = localUsers.find((u) => u.email.toLowerCase() === cleanEmail)
         }
@@ -63,19 +63,19 @@ export async function register(req, res) {
         const cleanName = name.trim()
         const newId = crypto.randomUUID()
 
-        if (pgAvailable) {
-            const check = await pool.query(
-                'SELECT id FROM users WHERE LOWER(email) = $1',
+        if (mysqlAvailable) {
+            const [check] = await pool.query(
+                'SELECT id FROM users WHERE LOWER(email) = ?',
                 [cleanEmail]
             )
-            if (check.rows.length > 0) {
+            if (check.length > 0) {
                 return res.status(409).json({
                     error: 'Ese correo ya tiene cuenta. Inicia sesión.'
                 })
             }
 
             await pool.query(
-                'INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)',
+                'INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)',
                 [newId, cleanName, cleanEmail, password]
             )
         } else {

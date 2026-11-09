@@ -1,22 +1,23 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: faltauno-postgres
+  mysql:
+    image: mysql:8.0
+    container_name: faltauno-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-faltauno}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-faltauno123}
-      POSTGRES_DB: ${POSTGRES_DB:-faltauno_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-faltauno_db}
+      MYSQL_USER: ${MYSQL_USER:-faltauno}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-faltauno123}
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-faltauno} -d ${POSTGRES_DB:-faltauno_db}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-faltauno}", "-p${MYSQL_PASSWORD:-faltauno123}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   mongodb:
     image: mongo:7
@@ -35,13 +36,17 @@ services:
     environment:
       PORT: 4000
       CORS_ORIGIN: "*"
-      DATABASE_URL: postgresql://${POSTGRES_USER:-faltauno}:${POSTGRES_PASSWORD:-faltauno123}@postgres:5432/${POSTGRES_DB:-faltauno_db}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-faltauno}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-faltauno123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-faltauno_db}
       MONGO_URI: mongodb://mongodb:27017
       MONGO_DB_NAME: ${MONGO_DB_NAME:-faltauno_nosql}
     ports:
       - "4000:4000"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       mongodb:
         condition: service_started
@@ -59,6 +64,5 @@ services:
       - backend
 
 volumes:
-  pgdata:
+  mysqldata:
   mongodata:
-

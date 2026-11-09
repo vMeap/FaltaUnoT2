@@ -1,15 +1,17 @@
-import pg from 'pg'
+import mysql from 'mysql2/promise'
 import { MongoClient } from 'mongodb'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
-const { Pool } = pg
-
-export const pool = new Pool({
-    connectionString:
-        process.env.DATABASE_URL ||
-        'postgresql://faltauno:faltauno123@localhost:5432/faltauno_db'
+export const pool = mysql.createPool({
+    host: process.env.MYSQL_HOST || 'localhost',
+    port: Number(process.env.MYSQL_PORT || 3306),
+    user: process.env.MYSQL_USER || 'faltauno',
+    password: process.env.MYSQL_PASSWORD || 'faltauno123',
+    database: process.env.MYSQL_DATABASE || 'faltauno_db',
+    waitForConnections: true,
+    connectionLimit: 10
 })
 
 const mongoClient = new MongoClient(
@@ -17,7 +19,7 @@ const mongoClient = new MongoClient(
 )
 
 export let logsCollection = null
-export let pgAvailable = false
+export let mysqlAvailable = false
 
 export const localUsers = [
     { id: 'user-1', name: 'Kevin', email: 'kevin@faltauno.cl', password: '123456' },
@@ -39,10 +41,10 @@ export const localLogs = []
 export async function connectDatabases() {
     try {
         await pool.query('SELECT 1')
-        pgAvailable = true
-        console.log('Conectado a PostgreSQL')
+        mysqlAvailable = true
+        console.log('Conectado a MySQL')
     } catch {
-        console.log('PostgreSQL no detectado, usando lista en memoria')
+        console.log('MySQL no detectado, usando lista en memoria')
     }
 
     try {

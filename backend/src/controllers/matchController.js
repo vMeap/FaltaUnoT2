@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { pool, pgAvailable, localMatches, saveLog } from '../db.js'
+import { pool, mysqlAvailable, localMatches, saveLog } from '../db.js'
 
 function formatRow(row) {
     return {
@@ -21,9 +21,9 @@ export async function getMatches(req, res) {
         const { sport } = req.query
         let list = []
 
-        if (pgAvailable) {
-            const result = await pool.query('SELECT * FROM matches ORDER BY date ASC, time ASC')
-            list = result.rows.map(formatRow)
+        if (mysqlAvailable) {
+            const [rows] = await pool.query('SELECT * FROM matches ORDER BY date ASC, time ASC')
+            list = rows.map(formatRow)
         } else {
             list = [...localMatches]
         }
@@ -41,9 +41,9 @@ export async function getMatches(req, res) {
 export async function getMatchStats(_req, res) {
     try {
         let list = []
-        if (pgAvailable) {
-            const result = await pool.query('SELECT * FROM matches')
-            list = result.rows.map(formatRow)
+        if (mysqlAvailable) {
+            const [rows] = await pool.query('SELECT * FROM matches')
+            list = rows.map(formatRow)
         } else {
             list = localMatches
         }
@@ -79,10 +79,10 @@ export async function createMatch(req, res) {
             organizerId: organizerId || null
         }
 
-        if (pgAvailable) {
+        if (mysqlAvailable) {
             await pool.query(
                 `INSERT INTO matches (id, sport, location, date, time, level, slots, latitude, longitude, organizer_id)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     newMatch.id,
                     newMatch.sport,
@@ -117,25 +117,33 @@ export async function updateMatch(req, res) {
         const { id } = req.params
         const { sport, level, date, time, location, slots, userEmail } = req.body
 
-        if (pgAvailable) {
-            const result = await pool.query(
+        if (mysqlAvailable) {
+            const [result] = await pool.query(
                 `UPDATE matches
-                 SET sport = COALESCE($2, sport),
-                     level = COALESCE($3, level),
-                     date = COALESCE($4, date),
-                     time = COALESCE($5, time),
-                     location = COALESCE($6, location),
-                     slots = COALESCE($7, slots)
-                 WHERE id = $1
-                 RETURNING *`,
-                [id, sport, level, date, time, location, slots !== undefined ? Number(slots) : null]
+                 SET sport = COALESCE(?, sport),
+                     level = COALESCE(?, level),
+                     date = COALESCE(?, date),
+                     time = COALESCE(?, time),
+                     location = COALESCE(?, location),
+                     slots = COALESCE(?, slots)
+                 WHERE id = ?`,
+                [
+                    sport ?? null,
+                    level ?? null,
+                    date ?? null,
+                    time ?? null,
+                    location ? location.trim() : null,
+                    slots !== undefined ? Number(slots) : null,
+                    id
+                ]
             )
 
-            if (result.rows.length === 0) {
+            if (result.affectedRows === 0) {
                 return res.status(404).json({ error: 'Partido no encontrado.' })
             }
 
-            const updated = formatRow(result.rows[0])
+            const [rows] = await pool.query('SELECT * FROM matches WHERE id = ?', [id])
+            const updated = formatRow(rows[0])
             await saveLog(userEmail || 'organizador', 'EDITAR_PARTIDO', `Editó partido de ${updated.sport} en ${updated.location}`)
             return res.json(updated)
         }
@@ -166,9 +174,9 @@ export async function deleteMatch(req, res) {
     try {
         const { id } = req.params
 
-        if (pgAvailable) {
-            const result = await pool.query('DELETE FROM matches WHERE id = $1 RETURNING *', [id])
-            if (result.rows.length === 0) {
+        if (mysqlAvailable) {
+            const [result] = await pool.query('DELETE FROM matches WHERE id = ?', [id])
+            if (result.affectedRows === 0) {
                 return res.status(404).json({ error: 'Partido no encontrado.' })
             }
             return res.json({ ok: true })
@@ -185,4 +193,3 @@ export async function deleteMatch(req, res) {
         return res.status(500).json({ error: 'Error al eliminar el partido.' })
     }
 }
-

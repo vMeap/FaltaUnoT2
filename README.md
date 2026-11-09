@@ -324,7 +324,7 @@ npm run start:backend
 npm run dev
 ```
 
-#### Opción B: Con Docker Compose (PostgreSQL + MongoDB + Backend + Frontend)
+#### Opción B: Con Docker Compose (MySQL + MongoDB + Backend + Frontend)
 
 ```bash
 docker compose up --build
@@ -333,7 +333,7 @@ docker compose up --build
 | Servicio | Dirección | Descripción |
 | :--- | :--- | :--- |
 | **Frontend React** | `http://localhost:5173` | Interfaz principal con Login, Registro, Cartelera e Indicadores |
-| **Backend API REST** | `http://localhost:4000/api` | Servidor Express conectado a PostgreSQL y MongoDB |
+| **Backend API REST** | `http://localhost:4000/api` | Servidor Express conectado a MySQL y MongoDB |
 | **Swagger / OpenAPI** | `http://localhost:4000/api/docs` | Documentación interactiva para probar todos los endpoints |
 
 ### 2. Autenticación y cuentas de prueba
@@ -347,9 +347,9 @@ El sistema de Login y Registro (`src/components/Login.jsx`) valida que el correo
 | **Camila Soto** | `camila@faltauno.cl` | `123456` | Pádel |
 | **Diego Morales** | `diego@faltauno.cl` | `123456` | Básquetbol |
 
-### 3. Persistencia SQL (PostgreSQL) y NoSQL (MongoDB)
+### 3. Persistencia SQL (MySQL) y NoSQL (MongoDB)
 
-- **PostgreSQL (`backend/sql/init.sql`)**:
+- **MySQL 8 (`backend/sql/init.sql`)**:
   - Tabla `users`: almacena las cuentas registradas (`id`, `name`, `email` único, `password`, `role`, `favorite_sport`).
   - Tabla `matches`: almacena los partidos publicados (`id`, `sport`, `location`, `date`, `time`, `level`, `slots`, `latitude`, `longitude`, `organizer_id`).
 - **MongoDB (`backend/src/db.js`, colección `logs`)**:
@@ -359,12 +359,12 @@ El sistema de Login y Registro (`src/components/Login.jsx`) valida que el correo
 
 | Método | Ruta | Descripción |
 | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Inicia sesión validando correo y contraseña en PostgreSQL y guarda acceso en MongoDB |
-| `POST` | `/api/auth/register` | Registra un nuevo usuario en PostgreSQL y guarda el evento en MongoDB |
-| `GET` | `/api/matches` | Lista los partidos disponibles |
+| `POST` | `/api/auth/login` | Inicia sesión validando correo y contraseña en MySQL y guarda acceso en MongoDB |
+| `POST` | `/api/auth/register` | Registra un nuevo usuario en MySQL y guarda el evento en MongoDB |
+| `GET` | `/api/matches` | Lista los partidos disponibles desde MySQL |
 | `GET` | `/api/matches/stats` | Obtiene indicadores de partidos publicados, abiertos y cupos |
-| `POST` | `/api/matches` | Crea un nuevo partido |
-| `PUT` | `/api/matches/:id` | Edita los datos o cupos de un partido |
-| `DELETE` | `/api/matches/:id` | Elimina un partido publicado |
+| `POST` | `/api/matches` | Crea un nuevo partido en MySQL |
+| `PUT` | `/api/matches/:id` | Edita los datos o cupos de un partido en MySQL |
+| `DELETE` | `/api/matches/:id` | Elimina un partido publicado en MySQL |
 | `GET` | `/api/logs` | Lista el historial de actividad desde MongoDB |
 | `POST` | `/api/logs` | Registra un evento de actividad en MongoDB |

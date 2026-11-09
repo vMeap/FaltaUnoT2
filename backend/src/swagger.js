@@ -3,7 +3,7 @@ export const swaggerDocument = {
     info: {
         title: 'API FaltaUno - Hito 3',
         version: '1.0.0',
-        description: 'Endpoints de usuarios, partidos (PostgreSQL) e historial de actividad (MongoDB).'
+        description: 'Endpoints de usuarios y partidos (MySQL) e historial de actividad (MongoDB).'
     },
     paths: {
         '/api/auth/login': {
@@ -34,7 +34,7 @@ export const swaggerDocument = {
         '/api/auth/register': {
             post: {
                 tags: ['Auth'],
-                summary: 'Registrar un nuevo usuario en PostgreSQL',
+                summary: 'Registrar un nuevo usuario en MySQL',
                 requestBody: {
                     required: true,
                     content: {
@@ -60,7 +60,7 @@ export const swaggerDocument = {
         '/api/matches': {
             get: {
                 tags: ['Matches'],
-                summary: 'Listar partidos disponibles (con filtro opcional por deporte)',
+                summary: 'Listar partidos disponibles desde MySQL (con filtro opcional por deporte)',
                 parameters: [
                     {
                         name: 'sport',
@@ -75,7 +75,7 @@ export const swaggerDocument = {
             },
             post: {
                 tags: ['Matches'],
-                summary: 'Crear un nuevo partido',
+                summary: 'Crear un nuevo partido en MySQL',
                 requestBody: {
                     required: true,
                     content: {
@@ -112,7 +112,7 @@ export const swaggerDocument = {
         '/api/matches/{id}': {
             put: {
                 tags: ['Matches'],
-                summary: 'Editar los datos o cupos de un partido',
+                summary: 'Editar los datos o cupos de un partido en MySQL',
                 parameters: [
                     { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
                 ],
@@ -141,7 +141,7 @@ export const swaggerDocument = {
             },
             delete: {
                 tags: ['Matches'],
-                summary: 'Eliminar o cancelar un partido publicado',
+                summary: 'Eliminar o cancelar un partido publicado en MySQL',
                 parameters: [
                     { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
                 ],
