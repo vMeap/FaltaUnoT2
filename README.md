@@ -305,11 +305,16 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 
 ---
 
-## Evolución Hito 3 — Plataforma Web Full Stack
+## Evolución Hito 3 — Plataforma Web Full Stack (MySQL + MongoDB)
 
-### 1. Cómo levantar el Backend, Bases de Datos y Frontend
+### 1. Cómo activar las Bases de Datos y levantar el proyecto
 
-#### Opción A: En local con Node.js (dos terminales)
+1. **Base de datos SQL (MySQL)**:
+   - Abre MySQL (por ejemplo desde XAMPP, MySQL Workbench o consola) y ejecuta el script `backend/sql/init.sql`. Esto creará la base de datos `faltauno_db` con las tablas `users` y `matches` y sus datos iniciales.
+   - Si tu usuario de MySQL tiene contraseña, puedes copiar `backend/.env.example` a `backend/.env` y ajustar `MYSQL_USER` y `MYSQL_PASSWORD` (por defecto usa `root` sin contraseña en `localhost:3306`).
+2. **Base de datos NoSQL (MongoDB)**:
+   - Asegúrate de tener activo MongoDB local en `mongodb://localhost:27017` (por ejemplo con MongoDB Compass). La base de datos `faltauno_nosql` y la colección `logs` se crean automáticamente al registrar actividad.
+3. **Levantar Backend y Frontend en dos terminales**:
 
 ```bash
 # Instalar dependencias del backend (solo la primera vez)
@@ -322,12 +327,6 @@ npm run start:backend
 
 # Terminal 2: levantar el Frontend React (http://localhost:5173)
 npm run dev
-```
-
-#### Opción B: Con Docker Compose (MySQL + MongoDB + Backend + Frontend)
-
-```bash
-docker compose up --build
 ```
 
 | Servicio | Dirección | Descripción |
@@ -349,7 +348,7 @@ El sistema de Login y Registro (`src/components/Login.jsx`) valida que el correo
 
 ### 3. Persistencia SQL (MySQL) y NoSQL (MongoDB)
 
-- **MySQL 8 (`backend/sql/init.sql`)**:
+- **MySQL (`backend/sql/init.sql`)**:
   - Tabla `users`: almacena las cuentas registradas (`id`, `name`, `email` único, `password`, `role`, `favorite_sport`).
   - Tabla `matches`: almacena los partidos publicados (`id`, `sport`, `location`, `date`, `time`, `level`, `slots`, `latitude`, `longitude`, `organizer_id`).
 - **MongoDB (`backend/src/db.js`, colección `logs`)**:
