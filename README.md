@@ -67,12 +67,18 @@ Otros comandos:
 | `npm run preview` | Sirve localmente la versión de producción ya generada |
 | `npm run lint` | Revisa el código con oxlint |
 
-El proyecto no requiere variables de entorno ni claves: la API utilizada es de acceso abierto.
+La API del clima no requiere claves. La conexión del backend a MySQL y MongoDB se configura en `backend/.env`, como se indica en la sección del Hito 3.
 
 ## Estructura general de la aplicación
 
 ```text
 FaltaUnoT2/
+├── backend/
+│   ├── sql/init.sql
+│   └── src/
+├── shared/
+│   ├── dates.js
+│   └── initialMatches.js
 ├── public/
 ├── src/
 │   ├── assets/
@@ -83,7 +89,7 @@ FaltaUnoT2/
 │   │   ├── WeatherBadge.jsx
 │   │   └── WeatherBadge.css
 │   ├── data/
-│   │   └── initialMatches.json
+│   │   └── initialUsers.json
 │   ├── services/
 │   │   └── weatherService.js
 │   ├── App.jsx
@@ -97,7 +103,7 @@ FaltaUnoT2/
 
 - `components/`: componentes de la interfaz. Reciben sus datos y acciones por props. `CreateMatchModal` es el formulario para crear partidos, `MyMatchesPanel` muestra los partidos en que la persona está inscrita, `AlertMessage` muestra los avisos y `WeatherBadge` muestra el clima de cada tarjeta.
 - `services/`: acceso a la API externa. `weatherService.js` consulta Open-Meteo y transforma la respuesta, para que el componente no tenga que conocer la URL ni el formato.
-- `data/`: `initialMatches.json` tiene los partidos iniciales con sus coordenadas.
+- `shared/initialMatches.js`: tiene los partidos iniciales con sus coordenadas y fechas relativas a hoy, compartidos por el frontend y el backend.
 - `App.jsx`: guarda el estado compartido y dibuja el listado, la búsqueda y los filtros.
 - `main.jsx`: punto de entrada, carga Bootstrap y los estilos.
 
@@ -121,7 +127,7 @@ Cada partido usa este formato:
 }
 ```
 
-`MyMatchesPanel` usa `matches`, `myMatchIds` y `onCancel`. El formulario usa `onSubmit` y `onClose`. `WeatherBadge` usa `latitude`, `longitude`, `date` y `time`. Los partidos iniciales están en `src/data/initialMatches.json` y llevan coordenadas para consultar el clima.
+`MyMatchesPanel` usa `matches`, `myMatchIds` y `onCancel`. El formulario usa `onSubmit` y `onClose`. `WeatherBadge` usa `latitude`, `longitude`, `date` y `time`. Los partidos iniciales están en `shared/initialMatches.js` y llevan coordenadas para consultar el clima.
 
 ## API pública utilizada: Open-Meteo
 
@@ -278,17 +284,17 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 
 ## Limitaciones conocidas
 
-**Datos y persistencia**
+**Datos y persistencia del Hito 2 (ver la evolución del Hito 3 más abajo)**
 
 - No existe backend. Los partidos y las inscripciones se guardan en el `localStorage` del navegador, por lo que no se comparten entre personas ni entre dispositivos.
 - Si se borran los datos del navegador, la aplicación vuelve a los partidos iniciales.
-- Mientras existan datos guardados en el navegador, los cambios hechos en `initialMatches.json` no se reflejan en pantalla.
+- En el Hito 3, el backend es la fuente de los partidos y el navegador guarda una copia por almacenamiento.
 - Las inscripciones son simuladas: sin backend no hay cuentas de usuario ni autenticación real.
 
 **Clima**
 
-- Los partidos creados desde el formulario no tienen coordenadas, por lo que muestran "Clima no disponible". Solo los partidos de `initialMatches.json` pueden mostrar pronóstico.
-- El pronóstico existe solo para los próximos 16 días, contando el día actual. Los partidos iniciales tienen fechas fijas: si están más lejos, muestran "Pronóstico disponible 15 días antes del partido".
+- Los partidos creados usan las coordenadas predeterminadas de Quillota; el formulario todavía no permite seleccionar coordenadas distintas.
+- La aplicación limita las fechas a hoy y los próximos 14 días. Los ejemplos de `shared/initialMatches.js` generan sus fechas al iniciar.
 - El pronóstico es por hora: un partido a las 18:30 muestra el valor de las 18:00.
 - El dato corresponde a la celda del modelo meteorológico más cercana a la coordenada indicada, que puede estar a algunos kilómetros.
 - Las horas se piden en la zona horaria del lugar del partido. Si hay un cambio de hora oficial entre el día de la consulta y el día del partido, el valor mostrado puede corresponder a la hora anterior o siguiente.
@@ -310,10 +316,10 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 ### 1. Cómo activar las Bases de Datos y levantar el proyecto
 
 1. **Base de datos SQL (MySQL)**:
-   - Abre MySQL (por ejemplo desde XAMPP, MySQL Workbench o consola) y ejecuta el script `backend/sql/init.sql`. Esto creará la base de datos `faltauno_db` con las tablas `users` y `matches` y sus datos iniciales.
+   - Abre MySQL Workbench o la consola y ejecuta el script `backend/sql/init.sql`. Esto creará la base de datos `faltauno_db` con las tablas `users`, `matches` y `registrations` y sus datos iniciales. Si ya tenías la base creada, vuelve a ejecutar el script para agregar la tabla `registrations`; no borra los datos existentes.
    - Si tu usuario de MySQL tiene contraseña, puedes copiar `backend/.env.example` a `backend/.env` y ajustar `MYSQL_USER` y `MYSQL_PASSWORD` (por defecto usa `root` sin contraseña en `localhost:3306`).
 2. **Base de datos NoSQL (MongoDB)**:
-   - Asegúrate de tener activo MongoDB local en `mongodb://localhost:27017` (por ejemplo con MongoDB Compass). La base de datos `faltauno_nosql` y la colección `logs` se crean automáticamente al registrar actividad.
+   - Asegúrate de tener activo MongoDB Server local en `mongodb://localhost:27017`. Puedes visualizar los datos con MongoDB Compass. La base de datos `faltauno_nosql` utiliza las colecciones `matches` y `logs`. La primera vez que se crea `matches` se agregan tres partidos de ejemplo.
 3. **Levantar Backend y Frontend en dos terminales**:
 
 ```bash
@@ -339,20 +345,27 @@ npm run dev
 
 El sistema de Login y Registro (`src/components/Login.jsx`) valida que el correo exista antes de permitir el ingreso. Las cuentas iniciales precargadas en `backend/sql/init.sql` y `src/data/initialUsers.json` son:
 
-| Nombre | Correo electrónico | Contraseña | Deporte favorito |
+| Nombre | Correo electrónico | Contraseña | Rol |
 | :--- | :--- | :--- | :--- |
-| **Kevin** | `kevin@faltauno.cl` | `123456` | Fútbol |
-| **Matías Rojas** | `matias@faltauno.cl` | `123456` | Fútbol |
-| **Camila Soto** | `camila@faltauno.cl` | `123456` | Pádel |
-| **Diego Morales** | `diego@faltauno.cl` | `123456` | Básquetbol |
+| **Kevin** | `kevin@faltauno.cl` | `123456` | Administrador |
+| **Matías Rojas** | `matias@faltauno.cl` | `123456` | Jugador |
+| **Camila Soto** | `camila@faltauno.cl` | `123456` | Jugador |
+| **Diego Morales** | `diego@faltauno.cl` | `123456` | Jugador |
+
+Kevin es el único administrador y puede crear, editar y eliminar partidos. Las cuentas nuevas siempre son jugadores. Todos pueden consultar partidos, inscribirse, cancelar su propia participación y descargar el calendario. Los permisos también se verifican en el backend mediante un token de sesión, válido durante 24 horas. Al reiniciar el backend se debe iniciar sesión nuevamente.
+
+Las cuentas son compartidas entre los tres almacenamientos: se validan en MySQL o en memoria cuando MySQL no está disponible. Cambiar de almacenamiento cambia los partidos y sus inscripciones.
 
 ### 3. Persistencia SQL (MySQL) y NoSQL (MongoDB)
 
 - **MySQL (`backend/sql/init.sql`)**:
   - Tabla `users`: almacena las cuentas registradas (`id`, `name`, `email` único, `password`, `role`, `favorite_sport`).
   - Tabla `matches`: almacena los partidos publicados (`id`, `sport`, `location`, `date`, `time`, `level`, `slots`, `latitude`, `longitude`, `organizer_id`).
-- **MongoDB (`backend/src/db.js`, colección `logs`)**:
-  - Registra la bitácora documental de accesos y actividad (`LOGIN`, `REGISTRO`, `INSCRIPCION`, `BAJA`, `NUEVO_PARTIDO`, `EDITAR_PARTIDO`), consultable desde la barra superior al hacer clic en el nombre del usuario (`src/components/ActivityModal.jsx`).
+  - Tabla `registrations`: guarda las inscripciones (`id`, `match_id`, `user_id`, `created_at`). Cada usuario puede inscribirse una sola vez en cada partido. Al eliminar un usuario o partido se eliminan sus inscripciones en cascada.
+- **MongoDB (`backend/src/db.js`)**:
+  - Colección `matches`: guarda sus propios partidos. Cada documento incluye un arreglo `registrations` con `id`, `userId` y `created_at`. La inscripción y el cambio de cupo se actualizan juntos en el documento, sin requerir configurar un replica set.
+  - Colección `logs`: guarda la actividad de los tres almacenamientos (`LOGIN`, `REGISTRO`, `INSCRIPCION`, `BAJA`, `NUEVO_PARTIDO`, `EDITAR_PARTIDO`, `ELIMINAR_PARTIDO`, `AJUSTAR_FECHA`). El campo `storage` indica `memory`, `mysql` o `mongodb`.
+- **Memoria (`backend/src/db.js`)**: utiliza `localMatches` y `localRegistrations`. Es un conjunto independiente y temporal; se reinicia al apagar el backend.
 
 ### 4. Endpoints del Backend (`/api`)
 
@@ -360,10 +373,37 @@ El sistema de Login y Registro (`src/components/Login.jsx`) valida que el correo
 | :--- | :--- | :--- |
 | `POST` | `/api/auth/login` | Inicia sesión validando correo y contraseña en MySQL y guarda acceso en MongoDB |
 | `POST` | `/api/auth/register` | Registra un nuevo usuario en MySQL y guarda el evento en MongoDB |
-| `GET` | `/api/matches` | Lista los partidos disponibles desde MySQL |
+| `POST` | `/api/auth/logout` | Cierra la sesión e invalida su token |
+| `GET` | `/api/matches` | Lista los partidos del almacenamiento elegido dentro del rango de fechas |
 | `GET` | `/api/matches/stats` | Obtiene indicadores de partidos publicados, abiertos y cupos |
-| `POST` | `/api/matches` | Crea un nuevo partido en MySQL |
-| `PUT` | `/api/matches/:id` | Edita los datos o cupos de un partido en MySQL |
-| `DELETE` | `/api/matches/:id` | Elimina un partido publicado en MySQL |
-| `GET` | `/api/logs` | Lista el historial de actividad desde MongoDB |
+| `POST` | `/api/matches` | Kevin crea un partido en el almacenamiento elegido |
+| `PUT` | `/api/matches/:id` | Kevin edita un partido en el almacenamiento elegido |
+| `DELETE` | `/api/matches/:id` | Kevin elimina el partido y sus inscripciones del almacenamiento elegido |
+| `GET` | `/api/registrations?userId=...` | Lista los IDs de partidos en los que está inscrito el usuario |
+| `POST` | `/api/registrations` | Recibe `matchId`, `userId`, `userEmail`; guarda la inscripción, descuenta un cupo y registra `INSCRIPCION` |
+| `DELETE` | `/api/registrations/:matchId?userId=...&userEmail=...` | Cancela la inscripción, devuelve un cupo y registra `BAJA` |
+| `GET` | `/api/logs` | Lista los últimos 20 eventos del almacenamiento elegido; cada jugador ve los suyos y Kevin ve todos |
 | `POST` | `/api/logs` | Registra un evento de actividad en MongoDB |
+
+### 5. Inscripciones y calendario (Integrante 3)
+
+- Al iniciar sesión o cambiar de almacenamiento se consultan los partidos y las inscripciones correspondientes. El navegador conserva una copia por usuario y almacenamiento en `faltauno.myMatches.v1.<storage>.<userId>` y guarda los partidos en `faltauno.matches.v1.<storage>` como respaldo de lectura.
+- "Yo apaño" y "Dar de baja" esperan la confirmación del backend y usan los cupos devueltos por este. Si la operación falla, se muestra el error. MySQL guarda la inscripción y el cambio de cupos en una transacción para evitar sobrecupos y cambios parciales.
+- Cada inscripción o baja genera un solo evento en MongoDB, visible en "Actividad reciente" al hacer clic en el nombre del usuario.
+- El selector "Almacenamiento" permite elegir Memoria, MySQL o MongoDB. Cada opción conserva sus propios partidos, cupos e inscripciones. Si se elige una base no disponible se informa el error y se puede elegir otra opción. El modo memoria también requiere tener el backend encendido.
+- En "Mis partidos", "Agendar en calendario" descarga un archivo `.ics` con deporte, lugar, fecha y hora local del partido. Se puede importar en un calendario compatible. No se fija una duración porque el partido no tiene hora de término.
+
+### 6. Fechas y pruebas desde Swagger
+
+La fecha de un partido debe estar entre hoy y los próximos 14 días, usando la zona `America/Santiago`. Se valida al crear y editar tanto en el formulario como en el backend. Los ejemplos de memoria generan fechas relativas a hoy. Al arrancar el backend, los partidos existentes fuera del rango se reubican dentro de los próximos 14 días, conservando sus IDs, cupos e inscripciones; el ajuste queda registrado en el historial.
+
+En Swagger, ejecutar primero `POST /api/auth/login`, copiar `user.token` y pegarlo en **Authorize**. Los endpoints de partidos, inscripciones e historial aceptan `storage=memory`, `storage=mysql` o `storage=mongodb`. Ejemplo: `GET /api/matches?storage=mongodb`.
+
+En Compass se pueden consultar `faltauno_nosql.matches` (incluido su arreglo `registrations`) y `faltauno_nosql.logs`. El historial de la aplicación muestra el almacenamiento elegido. Si MongoDB falla al guardar un evento, ese evento se conserva temporalmente en `localLogs`.
+
+Para verificar el frontend, ejecutar desde la raíz:
+
+```bash
+npm run lint
+npm run build
+```

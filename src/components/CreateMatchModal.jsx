@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { matchDate, validMatchDate } from '../../shared/dates.js'
 
-const today = new Date()
-const minimumDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 const emptyForm = { sport: '', level: '', date: '', time: '', location: '', slots: '1' }
 
-function CreateMatchModal({ editingMatch, onSubmit, onClose }) {
+function CreateMatchModal({ editingMatch, onSubmit, onClose, errorMessage }) {
+  const minimumDate = matchDate()
+  const maximumDate = matchDate(14)
   const [form, setForm] = useState(() =>
     editingMatch
       ? {
@@ -30,7 +31,7 @@ function CreateMatchModal({ editingMatch, onSubmit, onClose }) {
     const nextErrors = {}
     if (!form.sport) nextErrors.sport = 'Selecciona un deporte.'
     if (!form.level) nextErrors.level = 'Selecciona un nivel.'
-    if (!form.date || (!editingMatch && form.date < minimumDate)) nextErrors.date = 'La fecha debe ser hoy o posterior.'
+    if (!validMatchDate(form.date)) nextErrors.date = 'La fecha debe estar entre hoy y los próximos 14 días.'
     if (!form.time) nextErrors.time = 'Indica la hora del partido.'
     if (form.location.trim().length < 3) nextErrors.location = 'Escribe una ubicación de al menos 3 caracteres.'
     const slots = Number(form.slots)
@@ -52,11 +53,12 @@ function CreateMatchModal({ editingMatch, onSubmit, onClose }) {
           </div>
           <button type="button" className="btn-close" aria-label="Cerrar" onClick={onClose} />
         </div>
+        {errorMessage && <p className="alert alert-danger" role="alert">{errorMessage}</p>}
         <form onSubmit={handleSubmit} noValidate>
           <div className="row g-3">
             <div className="col-12 col-sm-6"><label className="form-label" htmlFor="sport">Deporte</label><select id="sport" name="sport" className={`form-select ${errors.sport ? 'is-invalid' : ''}`} value={form.sport} onChange={updateField}><option value="">Selecciona un deporte</option><option>Fútbol</option><option>Básquetbol</option><option>Pádel</option></select>{errors.sport && <div className="invalid-feedback">{errors.sport}</div>}</div>
             <div className="col-12 col-sm-6"><label className="form-label" htmlFor="level">Nivel de juego</label><select id="level" name="level" className={`form-select ${errors.level ? 'is-invalid' : ''}`} value={form.level} onChange={updateField}><option value="">Selecciona un nivel</option><option>Amateur</option><option>Intermedio</option><option>Competitivo</option></select>{errors.level && <div className="invalid-feedback">{errors.level}</div>}</div>
-            <div className="col-12 col-sm-6"><label className="form-label" htmlFor="date">Fecha</label><input id="date" name="date" type="date" min={editingMatch ? undefined : minimumDate} className={`form-control ${errors.date ? 'is-invalid' : ''}`} value={form.date} onChange={updateField} />{errors.date && <div className="invalid-feedback">{errors.date}</div>}</div>
+            <div className="col-12 col-sm-6"><label className="form-label" htmlFor="date">Fecha</label><input id="date" name="date" type="date" min={minimumDate} max={maximumDate} className={`form-control ${errors.date ? 'is-invalid' : ''}`} value={form.date} onChange={updateField} />{errors.date && <div className="invalid-feedback">{errors.date}</div>}</div>
             <div className="col-12 col-sm-6"><label className="form-label" htmlFor="time">Hora</label><input id="time" name="time" type="time" className={`form-control ${errors.time ? 'is-invalid' : ''}`} value={form.time} onChange={updateField} />{errors.time && <div className="invalid-feedback">{errors.time}</div>}</div>
             <div className="col-12"><label className="form-label" htmlFor="location">Ubicación</label><input id="location" name="location" type="text" minLength="3" className={`form-control ${errors.location ? 'is-invalid' : ''}`} placeholder="Ej: Complejo Deportivo Norte" value={form.location} onChange={updateField} />{errors.location && <div className="invalid-feedback">{errors.location}</div>}</div>
             <div className="col-12"><label className="form-label" htmlFor="slots">Cupos faltantes</label><input id="slots" name="slots" type="number" min="0" max="20" step="1" className={`form-control ${errors.slots ? 'is-invalid' : ''}`} value={form.slots} onChange={updateField} />{errors.slots && <div className="invalid-feedback">{errors.slots}</div>}</div>

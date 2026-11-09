@@ -1,4 +1,4 @@
-function Navbar({ user, myMatchesCount, onCreateMatch, onOpenProfile, onLogout }) {
+function Navbar({ user, storage, onStorageChange, myMatchesCount, onCreateMatch, onOpenProfile, onLogout }) {
     return (
         <header className="site-header">
             <nav
@@ -21,13 +21,22 @@ function Navbar({ user, myMatchesCount, onCreateMatch, onOpenProfile, onLogout }
                         </span>
                     </a>
 
-                    <button
+                    <div>
+                        <label className="small text-secondary d-block" htmlFor="storage">Almacenamiento</label>
+                        <select id="storage" className="form-select form-select-sm" value={storage} onChange={(event) => onStorageChange(event.target.value)}>
+                            <option value="memory">Memoria</option>
+                            <option value="mysql">MySQL</option>
+                            <option value="mongodb">MongoDB</option>
+                        </select>
+                    </div>
+
+                    {user?.role === 'admin' && <button
                         type="button"
                         className="btn btn-primary rounded-pill px-3"
                         onClick={onCreateMatch}
                     >
                         Crear partido
-                    </button>
+                    </button>}
 
                     {user && (
                         <div className="user-pill d-flex align-items-center gap-2 ps-sm-2">
@@ -35,13 +44,14 @@ function Navbar({ user, myMatchesCount, onCreateMatch, onOpenProfile, onLogout }
                                 type="button"
                                 className="btn btn-light btn-sm rounded-pill d-inline-flex align-items-center gap-2 px-2 py-1 border"
                                 onClick={onOpenProfile}
-                                title="Ver perfil SQL y bitácora MongoDB"
+                                title="Ver actividad reciente"
                             >
                                 <span className="user-avatar" aria-hidden="true">
                                     {user.name.charAt(0).toUpperCase()}
                                 </span>
                                 <span className="small fw-semibold d-none d-sm-inline text-truncate user-name">
                                     {user.name}
+                                    <small className="d-block text-secondary">{user.role === 'admin' ? 'Administrador' : 'Jugador'}</small>
                                 </span>
                             </button>
 

@@ -30,7 +30,7 @@ function EyeIcon({ open }) {
     )
 }
 
-function Login({ users, onLogin, onRegister }) {
+function Login({ onLogin, onRegister }) {
     const [mode, setMode] = useState('login')
     const [form, setForm] = useState(emptyForm)
     const [errors, setErrors] = useState({})
@@ -87,29 +87,9 @@ function Login({ users, onLogin, onRegister }) {
                     trimmedEmail,
                     form.password
                 )
-                onRegister({
-                    ...createdUser,
-                    password: form.password,
-                    rememberMe: form.rememberMe
-                })
+                onRegister(createdUser, form.rememberMe)
             } catch (error) {
-                if (error.message === 'Failed to fetch') {
-                    const emailExists = users.some(
-                        (item) => item.email.toLocaleLowerCase('es') === trimmedEmail
-                    )
-                    if (emailExists) {
-                        setErrors({ email: 'Ese correo ya tiene cuenta. Inicia sesión.' })
-                    } else {
-                        onRegister({
-                            name: trimmedName,
-                            email: trimmedEmail,
-                            password: form.password,
-                            rememberMe: form.rememberMe
-                        })
-                    }
-                } else {
-                    setErrors({ email: error.message })
-                }
+                setErrors({ email: error.message === 'Failed to fetch' ? 'Inicia el backend para crear tu cuenta.' : error.message })
             }
             return
         }
@@ -134,20 +114,7 @@ function Login({ users, onLogin, onRegister }) {
             onLogin(loggedUser, form.rememberMe)
         } catch (error) {
             if (error.message === 'Failed to fetch') {
-                const matchedUser = users.find(
-                    (item) => item.email.toLocaleLowerCase('es') === trimmedEmail
-                )
-                if (!matchedUser) {
-                    setErrors({
-                        email: 'Este correo no está registrado. Crea tu cuenta primero.'
-                    })
-                } else if (matchedUser.password !== form.password) {
-                    setErrors({
-                        password: 'La contraseña no coincide con esta cuenta.'
-                    })
-                } else {
-                    onLogin(matchedUser, form.rememberMe)
-                }
+                setErrors({ email: 'Inicia el backend para ingresar, también en modo memoria.' })
             } else if (error.message.includes('contraseña')) {
                 setErrors({ password: error.message })
             } else {

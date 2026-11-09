@@ -1,6 +1,8 @@
 import mysql from 'mysql2/promise'
 import { MongoClient } from 'mongodb'
 import dotenv from 'dotenv'
+import { matchDate, validMatchDate } from '../../shared/dates.js'
+import initialMatches from '../../shared/initialMatches.js'
 
 dotenv.config()
 
@@ -15,32 +17,30 @@ export const pool = mysql.createPool({
 })
 
 const mongoClient = new MongoClient(
-    process.env.MONGO_URI || 'mongodb://localhost:27017'
+    process.env.MONGO_URI || 'mongodb://localhost:27017',
+    { serverSelectionTimeoutMS: 3000 }
 )
 
 export let logsCollection = null
+export let matchesCollection = null
 export let mysqlAvailable = false
 
 export const localUsers = [
-    { id: 'user-1', name: 'Kevin', email: 'kevin@faltauno.cl', password: '123456' },
-    { id: 'user-2', name: 'Matías Rojas', email: 'matias@faltauno.cl', password: '123456' },
-    { id: 'user-3', name: 'Camila Soto', email: 'camila@faltauno.cl', password: '123456' },
-    { id: 'user-4', name: 'Diego Morales', email: 'diego@faltauno.cl', password: '123456' }
+    { id: 'user-1', name: 'Kevin', email: 'kevin@faltauno.cl', password: '123456', role: 'admin' },
+    { id: 'user-2', name: 'Matías Rojas', email: 'matias@faltauno.cl', password: '123456', role: 'jugador' },
+    { id: 'user-3', name: 'Camila Soto', email: 'camila@faltauno.cl', password: '123456', role: 'jugador' },
+    { id: 'user-4', name: 'Diego Morales', email: 'diego@faltauno.cl', password: '123456', role: 'jugador' }
 ]
 
-export const localMatches = [
-    { id: 'match-1', sport: 'Fútbol', location: 'Complejo Unión La Calera', date: '2026-11-07', time: '20:00', level: 'Amateur', slots: 1, latitude: -32.789, longitude: -71.213, organizerId: 'user-1' },
-    { id: 'match-2', sport: 'Fútbol', location: 'Canchas San Luis de Quillota', date: '2026-11-08', time: '18:30', level: 'Intermedio', slots: 2, latitude: -32.883, longitude: -71.248, organizerId: 'user-2' },
-    { id: 'match-3', sport: 'Pádel', location: 'Pádel Club Centro', date: '2026-11-09', time: '19:00', level: 'Amateur', slots: 1, latitude: -32.883, longitude: -71.248, organizerId: 'user-3' },
-    { id: 'match-4', sport: 'Básquetbol', location: 'Gimnasio Municipal', date: '2026-11-10', time: '17:30', level: 'Amateur', slots: 1, latitude: -32.883, longitude: -71.248, organizerId: 'user-4' },
-    { id: 'match-5', sport: 'Fútbol', location: 'Centro Deportivo Marcelo Salas', date: '2026-11-11', time: '12:00', level: 'Amateur', slots: 3, latitude: -32.883, longitude: -71.248, organizerId: 'user-1' }
-]
+export const localMatches = initialMatches.map((match) => ({ ...match }))
 
 export const localLogs = []
+export const localRegistrations = []
 
 export async function connectDatabases() {
     try {
         await pool.query('SELECT 1')
+        await pool.query("UPDATE users SET role = CASE WHEN LOWER(email) = 'kevin@faltauno.cl' THEN 'admin' ELSE 'jugador' END")
         mysqlAvailable = true
         console.log('Conectado a MySQL')
     } catch {
@@ -51,23 +51,59 @@ export async function connectDatabases() {
         await mongoClient.connect()
         const db = mongoClient.db(process.env.MONGO_DB_NAME || 'faltauno_nosql')
         logsCollection = db.collection('logs')
+        await logsCollection.updateMany({ storage: { $exists: false } }, { $set: { storage: 'mysql' } })
+        const exists = await db.listCollections({ name: 'matches' }).hasNext()
+        const matches = db.collection('matches')
+        await matches.createIndex({ id: 1 }, { unique: true })
+        if (!exists) {
+            await matches.insertMany(localMatches.slice(0, 3).map((match, index) => ({
+                ...match, id: `mongo-match-${index + 1}`, registrations: []
+            })))
+        }
+        matchesCollection = matches
         console.log('Conectado a MongoDB')
     } catch {
         console.log('MongoDB no detectado, usando lista en memoria')
     }
+
+    if (mysqlAvailable) {
+        const [matches] = await pool.query('SELECT id, date FROM matches ORDER BY id')
+        for (const [index, match] of matches.entries()) {
+            if (!validMatchDate(match.date)) {
+                const date = matchDate(index % 14 + 1)
+                await pool.query('UPDATE matches SET date = ? WHERE id = ?', [date, match.id])
+                await saveLog('Sistema', 'AJUSTAR_FECHA', `Partido ${match.id}: fecha ajustada a ${date}`, 'mysql')
+            }
+        }
+    }
+    if (matchesCollection) {
+        const matches = await matchesCollection.find({}, { projection: { id: 1, date: 1 } }).toArray()
+        for (const [index, match] of matches.entries()) {
+            if (!validMatchDate(match.date)) {
+                const date = matchDate(index % 14 + 1)
+                await matchesCollection.updateOne({ id: match.id }, { $set: { date } })
+                await saveLog('Sistema', 'AJUSTAR_FECHA', `Partido ${match.id}: fecha ajustada a ${date}`, 'mongodb')
+            }
+        }
+    }
 }
 
-export async function saveLog(userEmail, action, detail) {
+export async function saveLog(userEmail, action, detail, storage = 'memory') {
     const newLog = {
         userEmail,
         action,
         detail,
+        storage,
         date: new Date().toISOString()
     }
 
     if (logsCollection) {
-        await logsCollection.insertOne(newLog)
-    } else {
-        localLogs.unshift(newLog)
+        try {
+            await logsCollection.insertOne(newLog)
+            return
+        } catch {
+            // El historial sigue disponible en memoria si MongoDB falla.
+        }
     }
+    localLogs.unshift(newLog)
 }

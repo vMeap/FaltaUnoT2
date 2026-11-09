@@ -1,6 +1,6 @@
 import WeatherBadge from './WeatherBadge.jsx'
 
-function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
+function MatchCard({ match, joined, isAdmin, loading, onJoin, onCancel, onEdit, onDelete }) {
     const date = new Date(`${match.date}T12:00:00`).toLocaleDateString('es-CL')
     const full = match.slots <= 0
 
@@ -57,13 +57,13 @@ function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
                 <button
                     type="button"
                     className={`btn rounded-pill ${joined ? 'btn-outline-danger' : 'btn-primary'}`}
-                    disabled={full && !joined}
+                    disabled={loading || (full && !joined)}
                     onClick={handleClick}
                 >
                     {buttonText}
                 </button>
 
-                <div className="d-flex justify-content-end gap-3 mt-2 pt-2 border-top">
+                {isAdmin && <div className="d-flex justify-content-end gap-3 mt-2 pt-2 border-top">
                     <button
                         type="button"
                         className="btn btn-link btn-sm text-secondary p-0 text-decoration-none"
@@ -78,7 +78,7 @@ function MatchCard({ match, joined, onJoin, onCancel, onEdit, onDelete }) {
                     >
                         Eliminar
                     </button>
-                </div>
+                </div>}
             </div>
         </article>
     )

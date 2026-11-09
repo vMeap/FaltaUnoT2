@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { createSession } from '../middleware/auth.js'
 import {
     pool,
     mysqlAvailable,
@@ -41,10 +42,10 @@ export async function login(req, res) {
             })
         }
 
-        await saveLog(user.email, 'LOGIN', `Inicio de sesión de ${user.name}`)
+        await saveLog(user.email, 'LOGIN', `Inicio de sesión de ${user.name}`, req.storage)
 
         return res.json({
-            user: { id: user.id, name: user.name, email: user.email }
+            user: createSession(user)
         })
     } catch {
         return res.status(500).json({ error: 'Error en el servidor.' })
@@ -85,30 +86,35 @@ export async function register(req, res) {
                     error: 'Ese correo ya tiene cuenta. Inicia sesión.'
                 })
             }
-            localUsers.push({ id: newId, name: cleanName, email: cleanEmail, password })
+            localUsers.push({ id: newId, name: cleanName, email: cleanEmail, password, role: 'jugador' })
         }
 
-        await saveLog(cleanEmail, 'REGISTRO', `Cuenta creada para ${cleanName}`)
+        await saveLog(cleanEmail, 'REGISTRO', `Cuenta creada para ${cleanName}`, req.storage)
 
         return res.status(201).json({
-            user: { id: newId, name: cleanName, email: cleanEmail }
+            user: createSession({ id: newId, name: cleanName, email: cleanEmail })
         })
     } catch {
         return res.status(500).json({ error: 'Error al registrar usuario.' })
     }
 }
 
-export async function getLogs(_req, res) {
+export async function getLogs(req, res) {
     try {
+        const filter = { storage: req.storage }
+        if (req.user.role !== 'admin') filter.userEmail = req.user.email
+        let logs = []
         if (logsCollection) {
-            const logs = await logsCollection
-                .find()
+            logs = await logsCollection
+                .find(filter)
                 .sort({ date: -1 })
                 .limit(20)
                 .toArray()
-            return res.json(logs)
+                .catch(() => [])
         }
-        return res.json(localLogs.slice(0, 20))
+        const fallback = localLogs.filter((log) => log.storage === req.storage &&
+            (req.user.role === 'admin' || log.userEmail === req.user.email))
+        return res.json([...logs, ...fallback].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20))
     } catch {
         return res.status(500).json({ error: 'Error al obtener historial.' })
     }
@@ -116,11 +122,11 @@ export async function getLogs(_req, res) {
 
 export async function createLog(req, res) {
     try {
-        const { userEmail, action, detail } = req.body
+        const { action, detail } = req.body
         if (!action || !detail) {
             return res.status(400).json({ error: 'Faltan campos del registro.' })
         }
-        await saveLog(userEmail || 'anónimo', action, detail)
+        await saveLog(req.user.email, action, detail, req.storage)
         return res.status(201).json({ ok: true })
     } catch {
         return res.status(500).json({ error: 'Error al guardar registro.' })

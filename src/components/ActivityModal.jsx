@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
 import { fetchLogs } from '../services/api.js'
 
-function ActivityModal({ user, onClose }) {
+function ActivityModal({ user, storage, onClose }) {
     const [logs, setLogs] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetchLogs()
+        fetchLogs(storage)
             .then((data) => setLogs(data))
             .catch(() => setLogs([]))
             .finally(() => setLoading(false))
-    }, [])
+    }, [storage])
 
     return (
         <div
@@ -30,7 +30,7 @@ function ActivityModal({ user, onClose }) {
                     <div>
                         <p className="eyebrow mb-1">Mi cuenta ({user.email})</p>
                         <h2 className="h4 fw-bold mb-0" id="activity-title">
-                            Actividad reciente
+                            Actividad reciente · {storage === 'memory' ? 'Memoria' : storage === 'mysql' ? 'MySQL' : 'MongoDB'}
                         </h2>
                     </div>
                     <button

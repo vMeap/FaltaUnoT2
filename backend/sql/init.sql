@@ -28,21 +28,33 @@ CREATE TABLE IF NOT EXISTS matches (
     CONSTRAINT fk_matches_organizer FOREIGN KEY (organizer_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS registrations (
+    id VARCHAR(50) PRIMARY KEY,
+    match_id VARCHAR(50) NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (match_id, user_id),
+    FOREIGN KEY (match_id) REFERENCES matches(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Usuarios iniciales
 INSERT IGNORE INTO users (id, name, email, password, role, favorite_sport)
 VALUES
-    ('user-1', 'Kevin', 'kevin@faltauno.cl', '123456', 'organizador', 'Fútbol'),
+    ('user-1', 'Kevin', 'kevin@faltauno.cl', '123456', 'admin', 'Fútbol'),
     ('user-2', 'Matías Rojas', 'matias@faltauno.cl', '123456', 'jugador', 'Fútbol'),
-    ('user-3', 'Camila Soto', 'camila@faltauno.cl', '123456', 'organizador', 'Pádel'),
+    ('user-3', 'Camila Soto', 'camila@faltauno.cl', '123456', 'jugador', 'Pádel'),
     ('user-4', 'Diego Morales', 'diego@faltauno.cl', '123456', 'jugador', 'Básquetbol');
+
+UPDATE users SET role = CASE WHEN LOWER(email) = 'kevin@faltauno.cl' THEN 'admin' ELSE 'jugador' END;
 
 -- Partidos iniciales 
 
 
 INSERT IGNORE INTO matches (id, sport, location, date, time, level, slots, latitude, longitude, organizer_id)
 VALUES
-    ('match-1', 'Fútbol', 'Complejo Unión La Calera', '2026-11-07', '20:00', 'Amateur', 1, -32.789, -71.213, 'user-1'),
-    ('match-2', 'Fútbol', 'Canchas San Luis de Quillota', '2026-11-08', '18:30', 'Intermedio', 2, -32.883, -71.248, 'user-2'),
-    ('match-3', 'Pádel', 'Pádel Club Centro', '2026-11-09', '19:00', 'Amateur', 1, -32.883, -71.248, 'user-3'),
-    ('match-4', 'Básquetbol', 'Gimnasio Municipal', '2026-11-10', '17:30', 'Amateur', 1, -32.883, -71.248, 'user-4'),
-    ('match-5', 'Fútbol', 'Centro Deportivo Marcelo Salas', '2026-11-11', '12:00', 'Amateur', 3, -32.883, -71.248, 'user-1');
+    ('match-1', 'Fútbol', 'Complejo Unión La Calera', DATE_ADD(CURDATE(), INTERVAL 1 DAY), '20:00', 'Amateur', 1, -32.789, -71.213, 'user-1'),
+    ('match-2', 'Fútbol', 'Canchas San Luis de Quillota', DATE_ADD(CURDATE(), INTERVAL 2 DAY), '18:30', 'Intermedio', 2, -32.883, -71.248, 'user-1'),
+    ('match-3', 'Pádel', 'Pádel Club Centro', DATE_ADD(CURDATE(), INTERVAL 3 DAY), '19:00', 'Amateur', 1, -32.883, -71.248, 'user-1'),
+    ('match-4', 'Básquetbol', 'Gimnasio Municipal', DATE_ADD(CURDATE(), INTERVAL 4 DAY), '17:30', 'Amateur', 1, -32.883, -71.248, 'user-1'),
+    ('match-5', 'Fútbol', 'Centro Deportivo Marcelo Salas', DATE_ADD(CURDATE(), INTERVAL 5 DAY), '12:00', 'Amateur', 3, -32.883, -71.248, 'user-1');

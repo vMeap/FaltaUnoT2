@@ -1,6 +1,6 @@
 import MatchCard from './MatchCard.jsx'
 
-function MatchList({ matches, myMatchIds, onJoin, onCancel, onEdit, onDelete }) {
+function MatchList({ matches, myMatchIds, isAdmin, loading, onJoin, onCancel, onEdit, onDelete }) {
     return (
         <div className="row g-3">
             {matches.map((match) => (
@@ -8,6 +8,8 @@ function MatchList({ matches, myMatchIds, onJoin, onCancel, onEdit, onDelete }) 
                     <MatchCard
                         match={match}
                         joined={myMatchIds.includes(match.id)}
+                        isAdmin={isAdmin}
+                        loading={loading}
                         onJoin={onJoin}
                         onCancel={onCancel}
                         onEdit={onEdit}
