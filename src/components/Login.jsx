@@ -130,7 +130,7 @@ function Login({ onLogin, onRegister }) {
             <div className="container position-relative z-1">
                 <div className="login-shell mx-auto">
                     <div className="row g-0">
-                        <div className="col-12 col-lg-6 login-showcase p-4 p-sm-5 d-flex flex-column justify-content-between">
+                        <div className={`col-12 col-lg-6 login-showcase ${isRegister ? 'login-showcase-register' : ''} p-4 p-sm-5 d-flex flex-column justify-content-between`}>
                             <div className="showcase-top d-flex align-items-center justify-content-between">
                                 <div className="showcase-brand-pill">
                                     <span className="showcase-brand-icon" aria-hidden="true">

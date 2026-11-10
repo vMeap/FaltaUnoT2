@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 340" width="900" height="340" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <radialGradient id="slotGlow"><stop offset="0" stop-color="#fbbf24" stop-opacity=".55"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+  <radialGradient id="floodGlow"><stop offset="0" stop-color="#fff7d6" stop-opacity=".9"/><stop offset=".25" stop-color="#fde68a" stop-opacity=".35"/><stop offset="1" stop-color="#fde68a" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="900" height="340" fill="#0f2e20"/>
+<rect x="0" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="90" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="180" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="270" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="360" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="450" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="540" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="630" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="720" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<rect x="810" y="0" width="45" height="340" fill="rgba(255,255,255,.025)"/>
+<g fill="none" stroke="rgba(255,255,255,.16)" stroke-width="3"><line x1="450.0" y1="0" x2="450.0" y2="340"/><circle cx="450.0" cy="170.0" r="110"/><rect x="-10" y="70" width="140" height="200"/><rect x="770" y="70" width="140" height="200"/></g>
+<rect x="20" y="20" width="190" height="130" rx="6" fill="rgba(255,255,255,.12)" stroke="#f8faf9" stroke-width="5"/>
+<rect x="80" y="70" width="70" height="52" fill="none" stroke="#f8faf9" stroke-width="4"/>
+<ellipse cx="115" cy="152" rx="52" ry="11" fill="none" stroke="#f59e0b" stroke-width="7"/>
+<g stroke="rgba(248,250,249,.8)" stroke-width="2.5"><line x1="65.0" y1="156" x2="86.0" y2="236"/><line x1="81.6" y1="156" x2="95.6" y2="236"/><line x1="98.2" y1="156" x2="105.2" y2="236"/><line x1="114.8" y1="156" x2="114.8" y2="236"/><line x1="131.4" y1="156" x2="124.4" y2="236"/><line x1="148.0" y1="156" x2="134.0" y2="236"/><line x1="164.6" y1="156" x2="143.6" y2="236"/></g>
+<g fill="none" stroke="rgba(248,250,249,.8)" stroke-width="2.5"><path d="M 70 182 Q 115 196 160 182"/><path d="M 78 210 Q 115 222 152 210"/></g>
+<g transform="rotate(20 196 286)">
+  <circle cx="196" cy="286" r="46" fill="#e8862e"/>
+  <circle cx="209.8" cy="302.1" r="43.699999999999996" fill="rgba(120,45,10,.18)"/>
+  <g fill="none" stroke="#3b1d0c" stroke-width="2.5" stroke-linecap="round">
+    <line x1="196" y1="240" x2="196" y2="332"/>
+    <line x1="150" y1="286" x2="242" y2="286"/>
+    <path d="M 162.88 253.8 Q 184.5 286 162.88 318.2"/>
+    <path d="M 229.12 253.8 Q 207.5 286 229.12 318.2"/>
+  </g>
+  <circle cx="179.9" cy="267.6" r="8.28" fill="rgba(255,255,255,.18)"/>
+</g>
+<g transform="rotate(28 790 150)">
+  <rect x="778.75" y="215.0" width="22.5" height="77.5" rx="7.5" fill="#0b2419"/>
+  <rect x="778.75" y="232.5" width="22.5" height="57.5" rx="6.25" fill="#e5e7eb"/>
+  <g stroke="#9ca3af" stroke-width="1.75">
+    <line x1="778.75" y1="245.0" x2="801.25" y2="240.0"/>
+    <line x1="778.75" y1="260.0" x2="801.25" y2="255.0"/>
+    <line x1="778.75" y1="275.0" x2="801.25" y2="270.0"/>
+  </g>
+  <path d="M 790 67.5 C 867.5 67.5 865.0 187.5 810.0 220.0 L 770.0 220.0 C 715.0 187.5 712.5 67.5 790 67.5 Z" fill="#0f2e20" stroke="#fbbf24" stroke-width="6.25"/>
+  <path d="M 752.5 100.0 Q 790 77.5 827.5 100.0" fill="none" stroke="#fbbf24" stroke-width="5.0" stroke-linecap="round" opacity=".55"/>
+  <g fill="#071b12"><circle cx="765.6" cy="93.8" r="4.0"/><circle cx="781.9" cy="93.8" r="4.0"/><circle cx="798.1" cy="93.8" r="4.0"/><circle cx="814.4" cy="93.8" r="4.0"/><circle cx="757.5" cy="110.0" r="4.0"/><circle cx="773.8" cy="110.0" r="4.0"/><circle cx="790.0" cy="110.0" r="4.0"/><circle cx="806.2" cy="110.0" r="4.0"/><circle cx="822.5" cy="110.0" r="4.0"/><circle cx="765.6" cy="126.2" r="4.0"/><circle cx="781.9" cy="126.2" r="4.0"/><circle cx="798.1" cy="126.2" r="4.0"/><circle cx="814.4" cy="126.2" r="4.0"/><circle cx="830.6" cy="126.2" r="4.0"/><circle cx="757.5" cy="142.5" r="4.0"/><circle cx="773.8" cy="142.5" r="4.0"/><circle cx="790.0" cy="142.5" r="4.0"/><circle cx="806.2" cy="142.5" r="4.0"/><circle cx="822.5" cy="142.5" r="4.0"/><circle cx="765.6" cy="158.8" r="4.0"/><circle cx="781.9" cy="158.8" r="4.0"/><circle cx="798.1" cy="158.8" r="4.0"/><circle cx="814.4" cy="158.8" r="4.0"/><circle cx="830.6" cy="158.8" r="4.0"/><circle cx="757.5" cy="175.0" r="4.0"/><circle cx="773.8" cy="175.0" r="4.0"/><circle cx="790.0" cy="175.0" r="4.0"/><circle cx="806.2" cy="175.0" r="4.0"/><circle cx="822.5" cy="175.0" r="4.0"/><circle cx="765.6" cy="191.2" r="4.0"/><circle cx="781.9" cy="191.2" r="4.0"/><circle cx="798.1" cy="191.2" r="4.0"/><circle cx="814.4" cy="191.2" r="4.0"/></g>
+</g>
+<g>
+  <circle cx="690" cy="92" r="22" fill="#d9f24a"/>
+  <path d="M 669.1 85.4 Q 690 94.2 696.6 71.1" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M 683.4 112.9 Q 690 89.8 710.9 98.6" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="696.6" cy="99.7" r="19.8" fill="rgba(60,80,0,.14)"/>
+</g>
+<g>
+  <ellipse cx="333" cy="304" rx="20.25" ry="13.5" fill="rgba(0,0,0,.28)"/>
+  <ellipse cx="330" cy="300" rx="20.25" ry="12.75" fill="#f8faf9" stroke="#14532d" stroke-width="1.5"/>
+  <circle cx="330" cy="300" r="8.25" fill="#2b1a10"/>
+</g>
+<g>
+  <ellipse cx="393" cy="304" rx="20.25" ry="13.5" fill="rgba(0,0,0,.28)"/>
+  <ellipse cx="390" cy="300" rx="20.25" ry="12.75" fill="#0b2419" stroke="#d1fae5" stroke-width="1.5"/>
+  <circle cx="390" cy="300" r="8.25" fill="#3b2414"/>
+</g>
+<g>
+  <ellipse cx="453" cy="304" rx="20.25" ry="13.5" fill="rgba(0,0,0,.28)"/>
+  <ellipse cx="450" cy="300" rx="20.25" ry="12.75" fill="#f8faf9" stroke="#14532d" stroke-width="1.5"/>
+  <circle cx="450" cy="300" r="8.25" fill="#2b1a10"/>
+</g>
+<g>
+  <circle cx="510" cy="300" r="52.0" fill="url(#slotGlow)"/>
+  <circle cx="510" cy="300" r="20" fill="rgba(251,191,36,.16)" stroke="#fbbf24" stroke-width="3" stroke-dasharray="6 5"/>
+  <text x="510" y="309.36" text-anchor="middle" font-size="26" fill="#fbbf24" font-family="'Arial Black', Arial, Helvetica, sans-serif" font-weight="900">+</text>
+</g>
+<g>
+  <ellipse cx="573" cy="304" rx="20.25" ry="13.5" fill="rgba(0,0,0,.28)"/>
+  <ellipse cx="570" cy="300" rx="20.25" ry="12.75" fill="#f8faf9" stroke="#14532d" stroke-width="1.5"/>
+  <circle cx="570" cy="300" r="8.25" fill="#2b1a10"/>
+</g>
+</svg>

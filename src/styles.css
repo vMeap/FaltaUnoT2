@@ -76,7 +76,7 @@
       transparent 80px,
       transparent 160px
     ),
-    url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1920&q=80');
+    url('./assets/auth/login-background.svg');
   background-size: cover;
   background-position: center;
 }
@@ -125,11 +125,20 @@
   background-color: #0b2419;
   background-image:
     linear-gradient(180deg, rgba(8, 26, 18, .6) 0%, rgba(10, 34, 24, .5) 45%, rgba(7, 24, 16, .92) 100%),
-    url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1000&q=80');
+    url('./assets/auth/login-showcase.svg');
   background-size: cover;
   background-position: center;
   color: #ffffff;
 }
+
+.login-showcase-register {
+  background-image: linear-gradient(180deg, rgba(8, 26, 18, .6) 0%, rgba(10, 34, 24, .5) 45%, rgba(7, 24, 16, .92) 100%),
+  url('./assets/auth/register-showcase.svg');
+  background-position: center top;
+}
+
+
+
 .showcase-brand-pill {
   display: inline-flex;
   align-items: center;
@@ -207,12 +216,12 @@
 .auth-banner-login {
   background-image:
     linear-gradient(180deg, rgba(7, 24, 16, .35) 0%, rgba(9, 28, 19, .82) 100%),
-    url('https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=900&q=80');
+    url('./assets/auth/login-banner.svg');
 }
 .auth-banner-register {
   background-image:
     linear-gradient(180deg, rgba(7, 24, 16, .35) 0%, rgba(9, 28, 19, .82) 100%),
-    url('https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=900&q=80');
+    url('./assets/auth/register-banner.svg');
 }
 .auth-mode-tabs {
   display: inline-flex;
