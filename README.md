@@ -28,6 +28,7 @@ Quienes practican deporte de forma amateur suelen organizar sus partidos por men
 - Inscripción ("Yo apaño") y baja de un partido, con actualización de cupos.
 - Panel "Mis partidos" con los partidos en los que la persona está inscrita.
 - Creación de partidos mediante un formulario con validación.
+- Selección de canchas según el deporte al crear y editar partidos, sin escribir la ubicación. El catálogo se mantiene en `shared/venues.js`; el backend valida la sede y utiliza sus coordenadas para el clima.
 - Avisos de confirmación al inscribirse, darse de baja o publicar un partido.
 - Persistencia de los cambios en el navegador mediante `localStorage`.
 - Pronóstico del clima para la fecha y hora de cada partido, obtenido desde la API pública Open-Meteo.

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { pool, matchesCollection, localMatches, localRegistrations, saveLog } from '../db.js'
 import { matchDate, validMatchDate } from '../../../shared/dates.js'
+import { findVenue } from '../../../shared/venues.js'
 
 function formatRow(row) {
     return {
@@ -21,6 +22,7 @@ function matchError(match) {
     if (['sport', 'level', 'location'].some((key) => typeof match[key] !== 'string' || !match[key].trim())) {
         return 'Completa los datos del partido.'
     }
+    if (!findVenue(match.sport, match.location)) return 'Selecciona una cancha disponible para el deporte elegido.'
     if (!validMatchDate(match.date)) return 'La fecha debe estar entre hoy y los próximos 14 días.'
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(match.time)) return 'Indica una hora válida.'
     if (!Number.isInteger(match.slots) || match.slots < 0 || match.slots > 20) return 'Indica entre 0 y 20 cupos.'
@@ -71,7 +73,9 @@ export async function createMatch(req, res) {
         }
         const error = matchError(newMatch)
         if (error) return res.status(400).json({ error })
-        newMatch.location = location.trim()
+        const venue = findVenue(sport, location)
+        newMatch.latitude = venue.latitude
+        newMatch.longitude = venue.longitude
         if (req.storage === 'mysql') {
             await pool.query(
                 'INSERT INTO matches (id, sport, location, date, time, level, slots, latitude, longitude, organizer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -107,15 +111,18 @@ export async function updateMatch(req, res) {
             if (req.body[key] !== undefined) changes[key] = req.body[key]
         }
         if (changes.slots !== undefined) changes.slots = Number(changes.slots)
-        const error = matchError({ ...formatRow(match), ...changes })
+        const candidate = { ...formatRow(match), ...changes }
+        const error = matchError(candidate)
         if (error) return res.status(400).json({ error })
-        if (changes.location !== undefined) changes.location = changes.location.trim()
+        const venue = findVenue(candidate.sport, candidate.location)
+        changes.latitude = venue.latitude
+        changes.longitude = venue.longitude
         let updated
         if (req.storage === 'mysql') {
             await pool.query(
                 `UPDATE matches SET sport = COALESCE(?, sport), level = COALESCE(?, level),
-                 date = COALESCE(?, date), time = COALESCE(?, time), location = COALESCE(?, location), slots = COALESCE(?, slots) WHERE id = ?`,
-                [changes.sport ?? null, changes.level ?? null, changes.date ?? null, changes.time ?? null, changes.location ?? null, changes.slots ?? null, id]
+                 date = COALESCE(?, date), time = COALESCE(?, time), location = COALESCE(?, location), slots = COALESCE(?, slots), latitude = ?, longitude = ? WHERE id = ?`,
+                [changes.sport ?? null, changes.level ?? null, changes.date ?? null, changes.time ?? null, changes.location ?? null, changes.slots ?? null, changes.latitude, changes.longitude, id]
             )
             const [rows] = await pool.query('SELECT * FROM matches WHERE id = ?', [id])
             if (!rows[0]) return res.status(404).json({ error: 'Partido no encontrado.' })

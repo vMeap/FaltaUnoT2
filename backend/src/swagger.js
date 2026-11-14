@@ -114,7 +114,7 @@ export const swaggerDocument = {
                                     level: { type: 'string', example: 'Amateur' },
                                     date: { type: 'string', format: 'date', description: 'Desde hoy hasta hoy + 14 días, en America/Santiago' },
                                     time: { type: 'string', example: '20:00' },
-                                    location: { type: 'string', example: 'Canchas Sur' },
+                                    location: { type: 'string', example: 'Centro Deportivo Marcelo Salas', description: 'Nombre de una sede del catálogo shared/venues.js compatible con el deporte elegido.' },
                                     slots: { type: 'integer', example: 2 }
                                 }
                             }
@@ -159,7 +159,7 @@ export const swaggerDocument = {
                                     level: { type: 'string' },
                                     date: { type: 'string' },
                                     time: { type: 'string' },
-                                    location: { type: 'string' },
+                                    location: { type: 'string', description: 'Nombre de una sede del catálogo compatible con el deporte elegido.' },
                                     slots: { type: 'integer' }
                                 }
                             }
