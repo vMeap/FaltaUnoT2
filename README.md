@@ -28,7 +28,7 @@ Quienes practican deporte de forma amateur suelen organizar sus partidos por men
 - Inscripción ("Yo apaño") y baja de un partido, con actualización de cupos.
 - Panel "Mis partidos" con los partidos en los que la persona está inscrita.
 - Creación de partidos mediante un formulario con validación.
-- Selección de canchas según el deporte al crear y editar partidos, sin escribir la ubicación. El catálogo se mantiene en `shared/venues.js`; el backend valida la sede y utiliza sus coordenadas para el clima.
+- Selección de canchas según el deporte al crear y editar partidos, sin escribir la ubicación. El catálogo se mantiene en `shared/sedes.js`; el backend valida la sede y utiliza sus coordenadas para el clima.
 - Avisos de confirmación al inscribirse, darse de baja o publicar un partido.
 - Persistencia de los cambios en el navegador mediante `localStorage`.
 - Pronóstico del clima para la fecha y hora de cada partido, obtenido desde la API pública Open-Meteo.
@@ -75,22 +75,23 @@ La API del clima no requiere claves. La conexión del backend a MySQL y MongoDB 
 ```text
 FaltaUnoT2/
 ├── backend/
-│   ├── sql/init.sql
+│   ├── sql/inicializar.sql
 │   └── src/
 ├── shared/
-│   ├── dates.js
-│   └── initialMatches.js
+│   ├── fechas.js
+│   ├── partidosIniciales.js
+│   └── sedes.js
 ├── public/
 ├── src/
 │   ├── assets/
 │   ├── components/
-│   │   ├── AlertMessage.jsx
-│   │   ├── CreateMatchModal.jsx
-│   │   ├── MyMatchesPanel.jsx
-│   │   ├── WeatherBadge.jsx
-│   │   └── WeatherBadge.css
+│   │   ├── MensajeAlerta.jsx
+│   │   ├── FormularioPartido.jsx
+│   │   ├── PanelMisPartidos.jsx
+│   │   ├── IndicadorClima.jsx
+│   │   └── IndicadorClima.css
 │   ├── data/
-│   │   └── initialUsers.json
+│   │   └── usuariosIniciales.json
 │   ├── services/
 │   │   └── weatherService.js
 │   ├── App.jsx
@@ -102,11 +103,13 @@ FaltaUnoT2/
 └── vite.config.js
 ```
 
-- `components/`: componentes de la interfaz. Reciben sus datos y acciones por props. `CreateMatchModal` es el formulario para crear partidos, `MyMatchesPanel` muestra los partidos en que la persona está inscrita, `AlertMessage` muestra los avisos y `WeatherBadge` muestra el clima de cada tarjeta.
+- `components/`: componentes de la interfaz. Reciben sus datos y acciones por props. `FormularioPartido` (archivo `FormularioPartido.jsx`) permite crear y editar partidos, `PanelMisPartidos` muestra los partidos en que la persona está inscrita, `MensajeAlerta` muestra los avisos e `IndicadorClima` muestra el clima de cada tarjeta.
 - `services/`: acceso a la API externa. `weatherService.js` consulta Open-Meteo y transforma la respuesta, para que el componente no tenga que conocer la URL ni el formato.
-- `shared/initialMatches.js`: tiene los partidos iniciales con sus coordenadas y fechas relativas a hoy, compartidos por el frontend y el backend.
+- `shared/partidosIniciales.js`: tiene los partidos iniciales con sus coordenadas y fechas relativas a hoy, compartidos por el frontend y el backend.
 - `App.jsx`: guarda el estado compartido y dibuja el listado, la búsqueda y los filtros.
 - `main.jsx`: punto de entrada, carga Bootstrap y los estilos.
+
+Las variables, funciones y archivos propios utilizan nombres en español, como `partidos`, `guardarPartido`, `conectarBasesDeDatos`, `conexionesMySQL`, `fechas.js` y `FormularioPartido.jsx`. Los archivos de configuración reconocidos por las herramientas, como `package.json`, `vite.config.js`, `index.html` y `.env`, conservan sus nombres habituales. Los campos de la API y de las bases de datos (`sport`, `location`, `userId`, etc.), las rutas y los nombres exigidos por las bibliotecas mantienen su formato para conservar la compatibilidad con los datos existentes. Por ejemplo, `const { sport: deporte } = solicitud.body` lee el campo `sport` y permite utilizarlo dentro de la función como `deporte`.
 
 ### Estado compartido y contrato de integración
 
@@ -128,7 +131,7 @@ Cada partido usa este formato:
 }
 ```
 
-`MyMatchesPanel` usa `matches`, `myMatchIds` y `onCancel`. El formulario usa `onSubmit` y `onClose`. `WeatherBadge` usa `latitude`, `longitude`, `date` y `time`. Los partidos iniciales están en `shared/initialMatches.js` y llevan coordenadas para consultar el clima.
+`PanelMisPartidos` recibe las props `matches`, `myMatchIds` y `onCancel`, que utiliza internamente como `partidos`, `idsMisPartidos` y `alCancelar`. El formulario recibe `onSubmit` y `onClose`, utilizados como `alEnviar` y `alCerrar`. `IndicadorClima` recibe `latitude`, `longitude`, `date` y `time`, utilizados como `latitud`, `longitud`, `fecha` y `hora`. Los partidos iniciales están en `shared/partidosIniciales.js` y llevan coordenadas para consultar el clima.
 
 ## API pública utilizada: Open-Meteo
 
@@ -183,7 +186,7 @@ La API devuelve, dentro de `hourly`, un arreglo por variable con las 24 horas de
 | `hourly.weather_code` | Código WMO | Descripción de la condición |
 | `hourly.wind_speed_10m` | km/h | Velocidad del viento |
 
-Transformación realizada en `toMatchWeather` (`src/services/weatherService.js`):
+Transformación realizada en `convertirClimaPartido` (`src/services/weatherService.js`):
 
 1. La hora del partido se lleva a la hora en punto: un partido a las `18:30` se busca como `2026-10-12T18:00`.
 2. Se busca la posición de esa hora en `hourly.time`.
@@ -194,10 +197,10 @@ El resultado es un objeto simple: `{ temperature, precipitationProbability, wind
 
 ### Dónde aparecen los datos en la interfaz
 
-El componente `WeatherBadge` se muestra dentro de cada tarjeta del listado de partidos, en `App.jsx`, debajo de la fecha y la hora:
+El componente `IndicadorClima` (archivo `IndicadorClima.jsx`) se muestra dentro de cada tarjeta del listado de partidos, debajo de la fecha y la hora:
 
 ```jsx
-<WeatherBadge latitude={match.latitude} longitude={match.longitude} date={match.date} time={match.time} />
+<IndicadorClima latitude={partido.latitude} longitude={partido.longitude} date={partido.date} time={partido.time} />
 ```
 
 | Estado | Cuándo ocurre | Qué ve la persona |
@@ -216,7 +219,7 @@ En los casos sin coordenadas, de fecha lejana y de fecha pasada no se realiza ni
 
 - Ante un parámetro inválido, Open-Meteo responde con código HTTP `400` y un cuerpo `{ "error": true, "reason": "..." }`. El servicio lee `reason` y lanza un `Error` con ese mensaje.
 - Si no hay conexión o la API no responde, `fetch` rechaza la promesa.
-- En ambos casos `WeatherBadge` muestra el estado de error con el botón "Reintentar" y registra el detalle en la consola.
+- En ambos casos `IndicadorClima` muestra el estado de error con el botón "Reintentar" y registra el detalle en la consola.
 - Un error del clima afecta solo a ese indicador. El listado, la inscripción, la baja y la creación de partidos siguen funcionando, porque dependen de datos locales.
 - Si la tarjeta deja de mostrarse mientras la solicitud está pendiente (por ejemplo, al filtrar), la solicitud se cancela con `AbortController`.
 
@@ -229,7 +232,7 @@ Según los [términos de uso](https://open-meteo.com/en/terms) y la [licencia](h
 - **Autenticación:** no requiere clave. La clave solo aplica a los planes comerciales.
 - **Alcance del pronóstico:** hasta 16 días, contando el día actual.
 - **Licencia de los datos:** Creative Commons Atribución 4.0 Internacional (CC BY 4.0).
-- **Atribución:** la licencia exige un enlace a Open-Meteo junto a los datos mostrados. `WeatherBadge` incluye el enlace "Datos: Open-Meteo.com" en cada resultado.
+- **Atribución:** la licencia exige un enlace a Open-Meteo junto a los datos mostrados. `IndicadorClima` incluye el enlace "Datos: Open-Meteo.com" en cada resultado.
 - **Garantía:** el servicio se entrega sin garantía de disponibilidad ni de exactitud.
 
 Para no repetir solicitudes, `weatherService.js` guarda en memoria las respuestas de la sesión: dos tarjetas con el mismo lugar, fecha y hora generan una sola consulta.
@@ -255,7 +258,7 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 | Elemento | Detalle |
 | --- | --- |
 | Herramienta | Claude (Anthropic) |
-| Propósito | Generación de código y documentación: `weatherService.js`, `WeatherBadge.jsx`, `WeatherBadge.css`, la conexión del indicador en `App.jsx` y el borrador de este README. Revisión de la documentación oficial de Open-Meteo. |
+| Propósito | Generación de código y documentación: `weatherService.js`, `IndicadorClima.jsx`, `IndicadorClima.css`, la conexión del indicador en `App.jsx` y el borrador de este README. Revisión de la documentación oficial de Open-Meteo. |
 | Consulta representativa | "A partir de todo lo que falta, haz las cosas que le corresponden a Alonso", junto con la lista de tareas pendientes del equipo y el contrato de datos de cada partido. |
 | Resultado | La herramienta consultó la documentación, los términos y la licencia de Open-Meteo, y entregó el servicio de clima, el componente con sus estados (carga, resultado, error y fallback), sus estilos y la documentación de la API. Probó el código con respuestas simuladas, sin llamar a la API real. |
 | Modificación humana | Se ejecutó el proyecto en localhost y se revisó cómo se ve el indicador en las tarjetas. Se pidió quitar los íconos y los comentarios del código y adaptarlo al estilo de la base del proyecto. La conexión del componente en `App.jsx` se probó primero a mano en la copia local. |
@@ -295,7 +298,7 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 **Clima**
 
 - Los partidos creados usan las coordenadas predeterminadas de Quillota; el formulario todavía no permite seleccionar coordenadas distintas.
-- La aplicación limita las fechas a hoy y los próximos 14 días. Los ejemplos de `shared/initialMatches.js` generan sus fechas al iniciar.
+- La aplicación limita las fechas a hoy y los próximos 14 días. Los ejemplos de `shared/partidosIniciales.js` generan sus fechas al iniciar.
 - El pronóstico es por hora: un partido a las 18:30 muestra el valor de las 18:00.
 - El dato corresponde a la celda del modelo meteorológico más cercana a la coordenada indicada, que puede estar a algunos kilómetros.
 - Las horas se piden en la zona horaria del lugar del partido. Si hay un cambio de hora oficial entre el día de la consulta y el día del partido, el valor mostrado puede corresponder a la hora anterior o siguiente.
@@ -317,7 +320,7 @@ Este proyecto utilizó herramientas de IA como apoyo. Cada integrante revisó el
 ### 1. Cómo activar las Bases de Datos y levantar el proyecto
 
 1. **Base de datos SQL (MySQL)**:
-   - Abre MySQL Workbench o la consola y ejecuta el script `backend/sql/init.sql`. Esto creará la base de datos `faltauno_db` con las tablas `users`, `matches` y `registrations` y sus datos iniciales. Si ya tenías la base creada, vuelve a ejecutar el script para agregar la tabla `registrations`; no borra los datos existentes.
+   - Abre MySQL Workbench o la consola y ejecuta el script `backend/sql/inicializar.sql`. Esto creará la base de datos `faltauno_db` con las tablas `users`, `matches` y `registrations` y sus datos iniciales. Si ya tenías la base creada, vuelve a ejecutar el script para agregar la tabla `registrations`; no borra los datos existentes.
    - Si tu usuario de MySQL tiene contraseña, puedes copiar `backend/.env.example` a `backend/.env` y ajustar `MYSQL_USER` y `MYSQL_PASSWORD` (por defecto usa `root` sin contraseña en `localhost:3306`).
 2. **Base de datos NoSQL (MongoDB)**:
    - Asegúrate de tener activo MongoDB Server local en `mongodb://localhost:27017`. Puedes visualizar los datos con MongoDB Compass. La base de datos `faltauno_nosql` utiliza las colecciones `matches` y `logs`. La primera vez que se crea `matches` se agregan tres partidos de ejemplo.
@@ -344,7 +347,7 @@ npm run dev
 
 ### 2. Autenticación y cuentas de prueba
 
-El sistema de Login y Registro (`src/components/Login.jsx`) valida que el correo exista antes de permitir el ingreso. Las cuentas iniciales precargadas en `backend/sql/init.sql` y `src/data/initialUsers.json` son:
+El sistema de Login y Registro (`src/components/Acceso.jsx`) valida que el correo exista antes de permitir el ingreso. Las cuentas iniciales precargadas en `backend/sql/inicializar.sql` y `src/data/usuariosIniciales.json` son:
 
 | Nombre | Correo electrónico | Contraseña | Rol |
 | :--- | :--- | :--- | :--- |
@@ -359,14 +362,14 @@ Las cuentas son compartidas entre los tres almacenamientos: se validan en MySQL 
 
 ### 3. Persistencia SQL (MySQL) y NoSQL (MongoDB)
 
-- **MySQL (`backend/sql/init.sql`)**:
+- **MySQL (`backend/sql/inicializar.sql`)**:
   - Tabla `users`: almacena las cuentas registradas (`id`, `name`, `email` único, `password`, `role`, `favorite_sport`).
   - Tabla `matches`: almacena los partidos publicados (`id`, `sport`, `location`, `date`, `time`, `level`, `slots`, `latitude`, `longitude`, `organizer_id`).
   - Tabla `registrations`: guarda las inscripciones (`id`, `match_id`, `user_id`, `created_at`). Cada usuario puede inscribirse una sola vez en cada partido. Al eliminar un usuario o partido se eliminan sus inscripciones en cascada.
-- **MongoDB (`backend/src/db.js`)**:
+- **MongoDB (`backend/src/baseDeDatos.js`)**:
   - Colección `matches`: guarda sus propios partidos. Cada documento incluye un arreglo `registrations` con `id`, `userId` y `created_at`. La inscripción y el cambio de cupo se actualizan juntos en el documento, sin requerir configurar un replica set.
   - Colección `logs`: guarda la actividad de los tres almacenamientos (`LOGIN`, `REGISTRO`, `INSCRIPCION`, `BAJA`, `NUEVO_PARTIDO`, `EDITAR_PARTIDO`, `ELIMINAR_PARTIDO`, `AJUSTAR_FECHA`). El campo `storage` indica `memory`, `mysql` o `mongodb`.
-- **Memoria (`backend/src/db.js`)**: utiliza `localMatches` y `localRegistrations`. Es un conjunto independiente y temporal; se reinicia al apagar el backend.
+- **Memoria (`backend/src/baseDeDatos.js`)**: utiliza `partidosEnMemoria` e `inscripcionesEnMemoria`. Es un conjunto independiente y temporal; se reinicia al apagar el backend.
 
 ### 4. Endpoints del Backend (`/api`)
 
@@ -400,7 +403,7 @@ La fecha de un partido debe estar entre hoy y los próximos 14 días, usando la 
 
 En Swagger, ejecutar primero `POST /api/auth/login`, copiar `user.token` y pegarlo en **Authorize**. Los endpoints de partidos, inscripciones e historial aceptan `storage=memory`, `storage=mysql` o `storage=mongodb`. Ejemplo: `GET /api/matches?storage=mongodb`.
 
-En Compass se pueden consultar `faltauno_nosql.matches` (incluido su arreglo `registrations`) y `faltauno_nosql.logs`. El historial de la aplicación muestra el almacenamiento elegido. Si MongoDB falla al guardar un evento, ese evento se conserva temporalmente en `localLogs`.
+En Compass se pueden consultar `faltauno_nosql.matches` (incluido su arreglo `registrations`) y `faltauno_nosql.logs`. El historial de la aplicación muestra el almacenamiento elegido. Si MongoDB falla al guardar un evento, ese evento se conserva temporalmente en `actividadEnMemoria`.
 
 Para verificar el frontend, ejecutar desde la raíz:
 

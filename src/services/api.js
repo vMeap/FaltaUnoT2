@@ -1,84 +1,84 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
-const STORAGE_KEY = 'faltauno.storage.v1'
+const URL_API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const CLAVE_ALMACENAMIENTO = 'faltauno.storage.v1'
 
-export function getStorage() {
-    const storage = localStorage.getItem(STORAGE_KEY)
-    return ['memory', 'mysql', 'mongodb'].includes(storage) ? storage : 'mysql'
+export function obtenerAlmacenamiento() {
+    const almacenamiento = localStorage.getItem(CLAVE_ALMACENAMIENTO)
+    return ['memory', 'mysql', 'mongodb'].includes(almacenamiento) ? almacenamiento : 'mysql'
 }
 
-async function request(path, options = {}, storage = getStorage()) {
+async function realizarSolicitud(ruta, opciones = {}, almacenamiento = obtenerAlmacenamiento()) {
     let token
     try {
         token = JSON.parse(localStorage.getItem('faltauno.user.v1') || sessionStorage.getItem('faltauno.user.v1') || 'null')?.token
     } catch {}
-    const separator = path.includes('?') ? '&' : '?'
-    const response = await fetch(`${API_URL}${path}${separator}${new URLSearchParams({ storage })}`, {
-        ...options,
+    const separador = ruta.includes('?') ? '&' : '?'
+    const respuesta = await fetch(`${URL_API}${ruta}${separador}${new URLSearchParams({ storage: almacenamiento })}`, {
+        ...opciones,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
     })
-    const data = await response.json()
-    if (!response.ok) {
-        const error = new Error(data.error || 'No se pudo completar la solicitud.')
-        error.status = response.status
+    const datos = await respuesta.json()
+    if (!respuesta.ok) {
+        const error = new Error(datos.error || 'No se pudo completar la solicitud.')
+        error.status = respuesta.status
         throw error
     }
-    return data
+    return datos
 }
 
-export async function loginUser(email, password) {
-    const data = await request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
-    return data.user
+export async function iniciarSesionUsuario(correo, contrasena) {
+    const datos = await realizarSolicitud('/auth/login', { method: 'POST', body: JSON.stringify({ email: correo, password: contrasena }) })
+    return datos.user
 }
 
-export async function registerUser(name, email, password) {
-    const data = await request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) })
-    return data.user
+export async function registrarCuenta(nombre, correo, contrasena) {
+    const datos = await realizarSolicitud('/auth/register', { method: 'POST', body: JSON.stringify({ name: nombre, email: correo, password: contrasena }) })
+    return datos.user
 }
 
-export function logoutUser() {
-    return request('/auth/logout', { method: 'POST' })
+export function cerrarSesionUsuario() {
+    return realizarSolicitud('/auth/logout', { method: 'POST' })
 }
 
-export function fetchMatches(storage) {
-    return request('/matches', {}, storage)
+export function consultarPartidos(almacenamiento) {
+    return realizarSolicitud('/matches', {}, almacenamiento)
 }
 
-export function createMatchApi(values, storage) {
-    return request('/matches', { method: 'POST', body: JSON.stringify(values) }, storage)
+export function crearPartidoApi(valores, almacenamiento) {
+    return realizarSolicitud('/matches', { method: 'POST', body: JSON.stringify(valores) }, almacenamiento)
 }
 
-export function updateMatchApi(id, values, storage) {
-    return request(`/matches/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(values) }, storage)
+export function actualizarPartidoApi(identificador, valores, almacenamiento) {
+    return realizarSolicitud(`/matches/${encodeURIComponent(identificador)}`, { method: 'PUT', body: JSON.stringify(valores) }, almacenamiento)
 }
 
-export function deleteMatchApi(id, storage) {
-    return request(`/matches/${encodeURIComponent(id)}`, { method: 'DELETE' }, storage)
+export function eliminarPartidoApi(identificador, almacenamiento) {
+    return realizarSolicitud(`/matches/${encodeURIComponent(identificador)}`, { method: 'DELETE' }, almacenamiento)
 }
 
-export function fetchMyRegistrations(userId, storage) {
-    return request(`/registrations?${new URLSearchParams({ userId })}`, {}, storage)
+export function consultarMisInscripciones(idUsuario, almacenamiento) {
+    return realizarSolicitud(`/registrations?${new URLSearchParams({ userId: idUsuario })}`, {}, almacenamiento)
 }
 
-export function joinMatchApi(matchId, userId, userEmail, storage) {
-    return request('/registrations', { method: 'POST', body: JSON.stringify({ matchId, userId, userEmail }) }, storage)
+export function inscribirseEnPartidoApi(idPartido, idUsuario, correoUsuario, almacenamiento) {
+    return realizarSolicitud('/registrations', { method: 'POST', body: JSON.stringify({ matchId: idPartido, userId: idUsuario, userEmail: correoUsuario }) }, almacenamiento)
 }
 
-export function leaveMatchApi(matchId, userId, userEmail, storage) {
-    const query = new URLSearchParams({ userId, userEmail })
-    return request(`/registrations/${encodeURIComponent(matchId)}?${query}`, { method: 'DELETE' }, storage)
+export function cancelarInscripcionPartidoApi(idPartido, idUsuario, correoUsuario, almacenamiento) {
+    const consulta = new URLSearchParams({ userId: idUsuario, userEmail: correoUsuario })
+    return realizarSolicitud(`/registrations/${encodeURIComponent(idPartido)}?${consulta}`, { method: 'DELETE' }, almacenamiento)
 }
 
-export function fetchLogs(storage) {
-    return request('/logs', {}, storage)
+export function consultarActividad(almacenamiento) {
+    return realizarSolicitud('/logs', {}, almacenamiento)
 }
 
-export function sendLog(userEmail, action, detail) {
-    return request('/logs', { method: 'POST', body: JSON.stringify({ userEmail, action, detail }) })
+export function enviarActividad(correoUsuario, accion, detalle) {
+    return realizarSolicitud('/logs', { method: 'POST', body: JSON.stringify({ userEmail: correoUsuario, action: accion, detail: detalle }) })
 }
 
-export async function fetchWeather(latitude = -32.883, longitude = -71.248) {
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`)
-    if (!response.ok) throw new Error('Error al consultar clima.')
-    const data = await response.json()
-    return data.current_weather
+export async function consultarClima(latitud = -32.883, longitud = -71.248) {
+    const respuesta = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitud}&longitude=${longitud}&current_weather=true`)
+    if (!respuesta.ok) throw new Error('Error al consultar clima.')
+    const datos = await respuesta.json()
+    return datos.current_weather
 }

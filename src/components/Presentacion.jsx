@@ -1,4 +1,4 @@
-function Hero() {
+function Presentacion() {
     return (
         <section className="hero rounded-4 p-4 p-md-5 mb-5">
             <p className="eyebrow mb-2">
@@ -25,4 +25,4 @@ function Hero() {
     )
 }
 
-export default Hero
+export default Presentacion

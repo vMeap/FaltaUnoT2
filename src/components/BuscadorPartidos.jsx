@@ -1,4 +1,4 @@
-function SearchBar({ search, onSearchChange }) {
+function BuscadorPartidos({ search: busqueda, onSearchChange: alCambiarBusqueda }) {
     return (
         <>
             <label className="visually-hidden" htmlFor="match-search">
@@ -10,11 +10,11 @@ function SearchBar({ search, onSearchChange }) {
                 className="form-control search-input"
                 type="search"
                 placeholder="Buscar por deporte o lugar"
-                value={search}
-                onChange={(event) => onSearchChange(event.target.value)}
+                value={busqueda}
+                onChange={(evento) => alCambiarBusqueda(evento.target.value)}
             />
         </>
     )
 }
 
-export default SearchBar
+export default BuscadorPartidos

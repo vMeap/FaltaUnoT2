@@ -1,4 +1,4 @@
-function PitchBackground() {
+function FondoCancha() {
     return (
         <div className="login-bg-decor" aria-hidden="true">
             <div className="login-bg-image"/>
@@ -9,5 +9,5 @@ function PitchBackground() {
     )
 }
 
-export default PitchBackground
+export default FondoCancha
 

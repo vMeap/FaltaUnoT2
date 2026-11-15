@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import PitchBackground from './PitchBackground.jsx'
-import { loginUser, registerUser } from '../services/api.js'
+import FondoCancha from './FondoCancha.jsx'
+import { iniciarSesionUsuario, registrarCuenta } from '../services/api.js'
 
-const emptyForm = {
+const formularioVacio = {
     name: '',
     email: '',
     password: '',
@@ -10,10 +10,10 @@ const emptyForm = {
     rememberMe: true
 }
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const patronCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function EyeIcon({ open }) {
-    if (open) {
+function IconoOjo({ open: abierto }) {
+    if (abierto) {
         return (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -30,107 +30,107 @@ function EyeIcon({ open }) {
     )
 }
 
-function Login({ onLogin, onRegister }) {
-    const [mode, setMode] = useState('login')
-    const [form, setForm] = useState(emptyForm)
-    const [errors, setErrors] = useState({})
-    const [showPassword, setShowPassword] = useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+function Acceso({ onLogin: alIniciarSesion, onRegister: alRegistrarse }) {
+    const [modo, establecerModo] = useState('login')
+    const [formulario, establecerFormulario] = useState(formularioVacio)
+    const [errores, establecerErrores] = useState({})
+    const [mostrarContrasena, establecerMostrarContrasena] = useState(false)
+    const [mostrarConfirmacionContrasena, establecerMostrarConfirmacionContrasena] = useState(false)
 
-    const isRegister = mode === 'register'
+    const esRegistro = modo === 'register'
 
-    function switchMode(nextMode) {
-        setMode(nextMode)
-        setErrors({})
-        setShowPassword(false)
-        setShowConfirmPassword(false)
+    function cambiarModo(siguienteModo) {
+        establecerModo(siguienteModo)
+        establecerErrores({})
+        establecerMostrarContrasena(false)
+        establecerMostrarConfirmacionContrasena(false)
     }
 
-    function updateField(event) {
-        const { name, value, type, checked } = event.target
-        setForm((current) => ({
-            ...current,
-            [name]: type === 'checkbox' ? checked : value
+    function actualizarCampo(evento) {
+        const { name: nombre, value: valor, type: tipo, checked: marcado } = evento.target
+        establecerFormulario((actual) => ({
+            ...actual,
+            [nombre]: tipo === 'checkbox' ? marcado : valor
         }))
-        setErrors((current) => ({ ...current, [name]: '' }))
+        establecerErrores((actual) => ({ ...actual, [nombre]: '' }))
     }
 
-    async function handleSubmit(event) {
-        event.preventDefault()
-        const nextErrors = {}
-        const trimmedName = form.name.trim()
-        const trimmedEmail = form.email.trim().toLocaleLowerCase('es')
+    async function enviarFormulario(evento) {
+        evento.preventDefault()
+        const nuevosErrores = {}
+        const nombreLimpio = formulario.name.trim()
+        const correoLimpio = formulario.email.trim().toLocaleLowerCase('es')
 
-        if (isRegister) {
-            if (trimmedName.length < 2) {
-                nextErrors.name = 'Escribe tu nombre o apodo (mínimo 2 letras).'
+        if (esRegistro) {
+            if (nombreLimpio.length < 2) {
+                nuevosErrores.name = 'Escribe tu nombre o apodo (mínimo 2 letras).'
             }
 
-            if (!emailPattern.test(trimmedEmail)) {
-                nextErrors.email = 'Ingresa un correo válido (ej: nombre@correo.cl).'
+            if (!patronCorreo.test(correoLimpio)) {
+                nuevosErrores.email = 'Ingresa un correo válido (ej: nombre@correo.cl).'
             }
 
-            if (form.password.length < 4) {
-                nextErrors.password = 'Usa una contraseña de al menos 4 caracteres.'
+            if (formulario.password.length < 4) {
+                nuevosErrores.password = 'Usa una contraseña de al menos 4 caracteres.'
             }
 
-            if (!form.confirmPassword || form.password !== form.confirmPassword) {
-                nextErrors.confirmPassword = 'Las contraseñas no coinciden.'
+            if (!formulario.confirmPassword || formulario.password !== formulario.confirmPassword) {
+                nuevosErrores.confirmPassword = 'Las contraseñas no coinciden.'
             }
 
-            setErrors(nextErrors)
-            if (Object.keys(nextErrors).length > 0) return
+            establecerErrores(nuevosErrores)
+            if (Object.keys(nuevosErrores).length > 0) return
 
             try {
-                const createdUser = await registerUser(
-                    trimmedName,
-                    trimmedEmail,
-                    form.password
+                const usuarioCreado = await registrarCuenta(
+                    nombreLimpio,
+                    correoLimpio,
+                    formulario.password
                 )
-                onRegister(createdUser, form.rememberMe)
+                alRegistrarse(usuarioCreado, formulario.rememberMe)
             } catch (error) {
-                setErrors({ email: error.message === 'Failed to fetch' ? 'Inicia el backend para crear tu cuenta.' : error.message })
+                establecerErrores({ email: error.message === 'Failed to fetch' ? 'Inicia el backend para crear tu cuenta.' : error.message })
             }
             return
         }
 
-        if (!trimmedEmail) {
-            nextErrors.email = 'Ingresa tu correo electrónico.'
-        } else if (!emailPattern.test(trimmedEmail)) {
-            nextErrors.email = 'Ingresa un correo electrónico válido.'
+        if (!correoLimpio) {
+            nuevosErrores.email = 'Ingresa tu correo electrónico.'
+        } else if (!patronCorreo.test(correoLimpio)) {
+            nuevosErrores.email = 'Ingresa un correo electrónico válido.'
         }
 
-        if (!form.password) {
-            nextErrors.password = 'Ingresa tu contraseña.'
+        if (!formulario.password) {
+            nuevosErrores.password = 'Ingresa tu contraseña.'
         }
 
-        if (Object.keys(nextErrors).length > 0) {
-            setErrors(nextErrors)
+        if (Object.keys(nuevosErrores).length > 0) {
+            establecerErrores(nuevosErrores)
             return
         }
 
         try {
-            const loggedUser = await loginUser(trimmedEmail, form.password)
-            onLogin(loggedUser, form.rememberMe)
+            const usuarioAutenticado = await iniciarSesionUsuario(correoLimpio, formulario.password)
+            alIniciarSesion(usuarioAutenticado, formulario.rememberMe)
         } catch (error) {
             if (error.message === 'Failed to fetch') {
-                setErrors({ email: 'Inicia el backend para ingresar, también en modo memoria.' })
+                establecerErrores({ email: 'Inicia el backend para ingresar, también en modo memoria.' })
             } else if (error.message.includes('contraseña')) {
-                setErrors({ password: error.message })
+                establecerErrores({ password: error.message })
             } else {
-                setErrors({ email: error.message })
+                establecerErrores({ email: error.message })
             }
         }
     }
 
     return (
         <main className="login-page min-vh-100 d-flex align-items-center py-4 py-lg-5">
-            <PitchBackground />
+            <FondoCancha />
 
             <div className="container position-relative z-1">
                 <div className="login-shell mx-auto">
                     <div className="row g-0">
-                        <div className={`col-12 col-lg-6 login-showcase ${isRegister ? 'login-showcase-register' : ''} p-4 p-sm-5 d-flex flex-column justify-content-between`}>
+                        <div className={`col-12 col-lg-6 login-showcase ${esRegistro ? 'login-showcase-register' : ''} p-4 p-sm-5 d-flex flex-column justify-content-between`}>
                             <div className="showcase-top d-flex align-items-center justify-content-between">
                                 <div className="showcase-brand-pill">
                                     <span className="showcase-brand-icon" aria-hidden="true">
@@ -161,9 +161,9 @@ function Login({ onLogin, onRegister }) {
                                 <button
                                     type="button"
                                     className="btn btn-sm showcase-switch-btn rounded-pill px-3"
-                                    onClick={() => switchMode(isRegister ? 'login' : 'register')}
+                                    onClick={() => cambiarModo(esRegistro ? 'login' : 'register')}
                                 >
-                                    {isRegister ? 'Ya tengo cuenta →' : 'Crear cuenta nueva →'}
+                                    {esRegistro ? 'Ya tengo cuenta →' : 'Crear cuenta nueva →'}
                                 </button>
                             </div>
                         </div>
@@ -173,15 +173,15 @@ function Login({ onLogin, onRegister }) {
                             aria-labelledby="auth-title"
                         >
                             <div
-                                className={`auth-banner-header ${isRegister ? 'auth-banner-register' : 'auth-banner-login'} px-4 pt-4 pb-3 text-center position-relative d-flex flex-column justify-content-between`}
+                                className={`auth-banner-header ${esRegistro ? 'auth-banner-register' : 'auth-banner-login'} px-4 pt-4 pb-3 text-center position-relative d-flex flex-column justify-content-between`}
                             >
                                 <div className="d-flex align-items-center justify-content-between">
-                                    {isRegister ? (
+                                    {esRegistro ? (
                                         <button
                                             type="button"
                                             className="auth-back-btn"
                                             aria-label="Volver a Iniciar Sesión"
-                                            onClick={() => switchMode('login')}
+                                            onClick={() => cambiarModo('login')}
                                         >
                                             ‹
                                         </button>
@@ -193,18 +193,18 @@ function Login({ onLogin, onRegister }) {
                                         <button
                                             type="button"
                                             role="tab"
-                                            aria-selected={!isRegister}
-                                            className={`auth-tab-btn ${!isRegister ? 'active' : ''}`}
-                                            onClick={() => switchMode('login')}
+                                            aria-selected={!esRegistro}
+                                            className={`auth-tab-btn ${!esRegistro ? 'active' : ''}`}
+                                            onClick={() => cambiarModo('login')}
                                         >
                                             Ingresar
                                         </button>
                                         <button
                                             type="button"
                                             role="tab"
-                                            aria-selected={isRegister}
-                                            className={`auth-tab-btn ${isRegister ? 'active' : ''}`}
-                                            onClick={() => switchMode('register')}
+                                            aria-selected={esRegistro}
+                                            className={`auth-tab-btn ${esRegistro ? 'active' : ''}`}
+                                            onClick={() => cambiarModo('register')}
                                         >
                                             Crear cuenta
                                         </button>
@@ -213,10 +213,10 @@ function Login({ onLogin, onRegister }) {
 
                                 <div className="my-3">
                                     <h2 className="h3 fw-bold text-white mb-1 auth-banner-title" id="auth-title">
-                                        {isRegister ? 'Registrarse' : 'Iniciar Sesión'}
+                                        {esRegistro ? 'Registrarse' : 'Iniciar Sesión'}
                                     </h2>
                                     <p className="auth-banner-subtitle mb-0">
-                                        {isRegister
+                                        {esRegistro
                                             ? 'Crea tu perfil de jugador en un minuto'
                                             : 'Ingresa con tu correo y contraseña'}
                                     </p>
@@ -224,8 +224,8 @@ function Login({ onLogin, onRegister }) {
                             </div>
 
                             <div className="p-4 p-sm-5 flex-grow-1 d-flex flex-column justify-content-center">
-                                <form onSubmit={handleSubmit} noValidate>
-                                    {isRegister && (
+                                <form onSubmit={enviarFormulario} noValidate>
+                                    {esRegistro && (
                                         <div className="mb-3">
                                             <label className="form-label auth-label" htmlFor="auth-name">
                                                 Nombre o apodo
@@ -236,12 +236,12 @@ function Login({ onLogin, onRegister }) {
                                                 type="text"
                                                 autoComplete="name"
                                                 placeholder="Ej: Matías Rojas"
-                                                className={`form-control auth-field ${errors.name ? 'is-invalid' : ''}`}
-                                                value={form.name}
-                                                onChange={updateField}
+                                                className={`form-control auth-field ${errores.name ? 'is-invalid' : ''}`}
+                                                value={formulario.name}
+                                                onChange={actualizarCampo}
                                             />
-                                            {errors.name && (
-                                                <div className="invalid-feedback">{errors.name}</div>
+                                            {errores.name && (
+                                                <div className="invalid-feedback">{errores.name}</div>
                                             )}
                                         </div>
                                     )}
@@ -256,12 +256,12 @@ function Login({ onLogin, onRegister }) {
                                             type="email"
                                             autoComplete="email"
                                             placeholder="tu@correo.cl"
-                                            className={`form-control auth-field ${errors.email ? 'is-invalid' : ''}`}
-                                            value={form.email}
-                                            onChange={updateField}
+                                            className={`form-control auth-field ${errores.email ? 'is-invalid' : ''}`}
+                                            value={formulario.email}
+                                            onChange={actualizarCampo}
                                         />
-                                        {errors.email && (
-                                            <div className="invalid-feedback">{errors.email}</div>
+                                        {errores.email && (
+                                            <div className="invalid-feedback">{errores.email}</div>
                                         )}
                                     </div>
 
@@ -273,30 +273,30 @@ function Login({ onLogin, onRegister }) {
                                             <input
                                                 id="auth-password"
                                                 name="password"
-                                                type={showPassword ? 'text' : 'password'}
-                                                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                                                type={mostrarContrasena ? 'text' : 'password'}
+                                                autoComplete={esRegistro ? 'new-password' : 'current-password'}
                                                 placeholder="Escribe tu contraseña"
-                                                className={`form-control auth-field pe-5 ${errors.password ? 'is-invalid' : ''}`}
-                                                value={form.password}
-                                                onChange={updateField}
+                                                className={`form-control auth-field pe-5 ${errores.password ? 'is-invalid' : ''}`}
+                                                value={formulario.password}
+                                                onChange={actualizarCampo}
                                             />
                                             <button
                                                 type="button"
                                                 className="auth-eye-btn"
-                                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                                                onClick={() => setShowPassword((prev) => !prev)}
+                                                aria-label={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                                onClick={() => establecerMostrarContrasena((previo) => !previo)}
                                             >
-                                                <EyeIcon open={showPassword} />
+                                                <IconoOjo open={mostrarContrasena} />
                                             </button>
-                                            {errors.password && (
+                                            {errores.password && (
                                                 <div className="invalid-feedback d-block">
-                                                    {errors.password}
+                                                    {errores.password}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    {isRegister ? (
+                                    {esRegistro ? (
                                         <div className="mb-4">
                                             <label className="form-label auth-label" htmlFor="auth-confirm-password">
                                                 Confirmar Contraseña
@@ -305,24 +305,24 @@ function Login({ onLogin, onRegister }) {
                                                 <input
                                                     id="auth-confirm-password"
                                                     name="confirmPassword"
-                                                    type={showConfirmPassword ? 'text' : 'password'}
+                                                    type={mostrarConfirmacionContrasena ? 'text' : 'password'}
                                                     autoComplete="new-password"
                                                     placeholder="Repite tu contraseña"
-                                                    className={`form-control auth-field pe-5 ${errors.confirmPassword ? 'is-invalid' : ''}`}
-                                                    value={form.confirmPassword}
-                                                    onChange={updateField}
+                                                    className={`form-control auth-field pe-5 ${errores.confirmPassword ? 'is-invalid' : ''}`}
+                                                    value={formulario.confirmPassword}
+                                                    onChange={actualizarCampo}
                                                 />
                                                 <button
                                                     type="button"
                                                     className="auth-eye-btn"
-                                                    aria-label={showConfirmPassword ? 'Ocultar confirmación' : 'Mostrar confirmación'}
-                                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                                    aria-label={mostrarConfirmacionContrasena ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+                                                    onClick={() => establecerMostrarConfirmacionContrasena((previo) => !previo)}
                                                 >
-                                                    <EyeIcon open={showConfirmPassword} />
+                                                    <IconoOjo open={mostrarConfirmacionContrasena} />
                                                 </button>
-                                                {errors.confirmPassword && (
+                                                {errores.confirmPassword && (
                                                     <div className="invalid-feedback d-block">
-                                                        {errors.confirmPassword}
+                                                        {errores.confirmPassword}
                                                     </div>
                                                 )}
                                             </div>
@@ -335,8 +335,8 @@ function Login({ onLogin, onRegister }) {
                                                     name="rememberMe"
                                                     type="checkbox"
                                                     className="form-check-input auth-checkbox"
-                                                    checked={form.rememberMe}
-                                                    onChange={updateField}
+                                                    checked={formulario.rememberMe}
+                                                    onChange={actualizarCampo}
                                                 />
                                                 <label className="form-check-label auth-remember-label" htmlFor="auth-remember">
                                                     Recuérdame
@@ -353,18 +353,18 @@ function Login({ onLogin, onRegister }) {
                                         type="submit"
                                         className="btn btn-auth-cta rounded-pill w-100 py-3 fw-bold"
                                     >
-                                        {isRegister ? 'Registrarse' : 'Iniciar Sesión'}
+                                        {esRegistro ? 'Registrarse' : 'Iniciar Sesión'}
                                     </button>
                                 </form>
 
                                 <p className="text-center auth-footer-text mt-4 mb-0">
-                                    {isRegister ? (
+                                    {esRegistro ? (
                                         <>
                                             ¿Tienes una cuenta?{' '}
                                             <button
                                                 type="button"
                                                 className="btn btn-link auth-switch-link p-0 align-baseline"
-                                                onClick={() => switchMode('login')}
+                                                onClick={() => cambiarModo('login')}
                                             >
                                                 Iniciar Sesión
                                             </button>
@@ -375,7 +375,7 @@ function Login({ onLogin, onRegister }) {
                                             <button
                                                 type="button"
                                                 className="btn btn-link auth-switch-link p-0 align-baseline"
-                                                onClick={() => switchMode('register')}
+                                                onClick={() => cambiarModo('register')}
                                             >
                                                 Registrarse
                                             </button>
@@ -391,4 +391,4 @@ function Login({ onLogin, onRegister }) {
     )
 }
 
-export default Login
+export default Acceso

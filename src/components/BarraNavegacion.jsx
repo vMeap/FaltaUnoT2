@@ -1,4 +1,4 @@
-function Navbar({ user, storage, onStorageChange, myMatchesCount, onCreateMatch, onOpenProfile, onLogout }) {
+function BarraNavegacion({ user: usuario, storage: almacenamiento, onStorageChange: alCambiarAlmacenamiento, myMatchesCount: cantidadMisPartidos, onCreateMatch: alCrearPartido, onOpenProfile: alAbrirPerfil, onLogout: alCerrarSesion }) {
     return (
         <header className="site-header">
             <nav
@@ -17,48 +17,48 @@ function Navbar({ user, storage, onStorageChange, myMatchesCount, onCreateMatch,
                     <a className="nav-link" href="#mis-partidos">
                         Mis partidos{' '}
                         <span className="badge rounded-pill text-bg-success">
-                            {myMatchesCount}
+                            {cantidadMisPartidos}
                         </span>
                     </a>
 
                     <div>
                         <label className="small text-secondary d-block" htmlFor="storage">Almacenamiento</label>
-                        <select id="storage" className="form-select form-select-sm" value={storage} onChange={(event) => onStorageChange(event.target.value)}>
+                        <select id="storage" className="form-select form-select-sm" value={almacenamiento} onChange={(evento) => alCambiarAlmacenamiento(evento.target.value)}>
                             <option value="memory">Memoria</option>
                             <option value="mysql">MySQL</option>
                             <option value="mongodb">MongoDB</option>
                         </select>
                     </div>
 
-                    {user?.role === 'admin' && <button
+                    {usuario?.role === 'admin' && <button
                         type="button"
                         className="btn btn-primary rounded-pill px-3"
-                        onClick={onCreateMatch}
+                        onClick={alCrearPartido}
                     >
                         Crear partido
                     </button>}
 
-                    {user && (
+                    {usuario && (
                         <div className="user-pill d-flex align-items-center gap-2 ps-sm-2">
                             <button
                                 type="button"
                                 className="btn btn-light btn-sm rounded-pill d-inline-flex align-items-center gap-2 px-2 py-1 border"
-                                onClick={onOpenProfile}
+                                onClick={alAbrirPerfil}
                                 title="Ver actividad reciente"
                             >
                                 <span className="user-avatar" aria-hidden="true">
-                                    {user.name.charAt(0).toUpperCase()}
+                                    {usuario.name.charAt(0).toUpperCase()}
                                 </span>
                                 <span className="small fw-semibold d-none d-sm-inline text-truncate user-name">
-                                    {user.name}
-                                    <small className="d-block text-secondary">{user.role === 'admin' ? 'Administrador' : 'Jugador'}</small>
+                                    {usuario.name}
+                                    <small className="d-block text-secondary">{usuario.role === 'admin' ? 'Administrador' : 'Jugador'}</small>
                                 </span>
                             </button>
 
                             <button
                                 type="button"
                                 className="btn btn-outline-secondary btn-sm rounded-pill px-3"
-                                onClick={onLogout}
+                                onClick={alCerrarSesion}
                             >
                                 Salir
                             </button>
@@ -70,4 +70,4 @@ function Navbar({ user, storage, onStorageChange, myMatchesCount, onCreateMatch,
     )
 }
 
-export default Navbar
+export default BarraNavegacion

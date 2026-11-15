@@ -1,4 +1,4 @@
-export const swaggerDocument = {
+export const documentoSwagger = {
     openapi: '3.0.0',
     info: {
         title: 'API FaltaUno - Hito 3',
@@ -114,7 +114,7 @@ export const swaggerDocument = {
                                     level: { type: 'string', example: 'Amateur' },
                                     date: { type: 'string', format: 'date', description: 'Desde hoy hasta hoy + 14 días, en America/Santiago' },
                                     time: { type: 'string', example: '20:00' },
-                                    location: { type: 'string', example: 'Centro Deportivo Marcelo Salas', description: 'Nombre de una sede del catálogo shared/venues.js compatible con el deporte elegido.' },
+                                    location: { type: 'string', example: 'Centro Deportivo Marcelo Salas', description: 'Nombre de una sede del catálogo shared/sedes.js compatible con el deporte elegido.' },
                                     slots: { type: 'integer', example: 2 }
                                 }
                             }

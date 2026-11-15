@@ -1,67 +1,67 @@
 import { useEffect, useMemo, useState } from 'react'
-import initialMatches from '../shared/initialMatches.js'
-import { validMatchDate } from '../shared/dates.js'
-import AlertMessage from './components/AlertMessage.jsx'
-import CreateMatchModal from './components/CreateMatchModal.jsx'
-import MyMatchesPanel from './components/MyMatchesPanel.jsx'
-import Navbar from './components/Navbar.jsx'
-import Hero from './components/Hero.jsx'
-import Footer from './components/Footer.jsx'
-import MatchList from './components/MatchList.jsx'
-import SearchBar from './components/SearchBar.jsx'
-import FilterBar from './components/FilterBar.jsx'
-import Login from './components/Login.jsx'
-import ActivityModal from './components/ActivityModal.jsx'
+import partidosIniciales from '../shared/partidosIniciales.js'
+import { esFechaPartidoValida } from '../shared/fechas.js'
+import MensajeAlerta from './components/MensajeAlerta.jsx'
+import FormularioPartido from './components/FormularioPartido.jsx'
+import PanelMisPartidos from './components/PanelMisPartidos.jsx'
+import BarraNavegacion from './components/BarraNavegacion.jsx'
+import Presentacion from './components/Presentacion.jsx'
+import PieDePagina from './components/PieDePagina.jsx'
+import ListaPartidos from './components/ListaPartidos.jsx'
+import BuscadorPartidos from './components/BuscadorPartidos.jsx'
+import FiltroDeportes from './components/FiltroDeportes.jsx'
+import Acceso from './components/Acceso.jsx'
+import ModalActividad from './components/ModalActividad.jsx'
 import {
-  fetchMatches,
-  createMatchApi,
-  updateMatchApi,
-  deleteMatchApi,
-  fetchMyRegistrations,
-  joinMatchApi,
-  leaveMatchApi,
-  getStorage,
-  logoutUser
+  consultarPartidos,
+  crearPartidoApi,
+  actualizarPartidoApi,
+  eliminarPartidoApi,
+  consultarMisInscripciones,
+  inscribirseEnPartidoApi,
+  cancelarInscripcionPartidoApi,
+  obtenerAlmacenamiento,
+  cerrarSesionUsuario
 } from './services/api.js'
 import './styles.css'
 
-const MATCHES_KEY = 'faltauno.matches.v1'
-const MY_MATCHES_KEY = 'faltauno.myMatches.v1'
-const USER_KEY = 'faltauno.user.v1'
-const STORAGE_KEY = 'faltauno.storage.v1'
+const CLAVE_PARTIDOS = 'faltauno.matches.v1'
+const CLAVE_MIS_PARTIDOS = 'faltauno.myMatches.v1'
+const CLAVE_USUARIO = 'faltauno.user.v1'
+const CLAVE_ALMACENAMIENTO = 'faltauno.storage.v1'
 
-function readStoredArray(key, fallback) {
+function leerListaGuardada(clave, respaldo) {
   try {
-    const stored = localStorage.getItem(key)
+    const guardado = localStorage.getItem(clave)
 
-    if (!stored) return fallback
+    if (!guardado) return respaldo
 
-    const parsed = JSON.parse(stored)
+    const interpretado = JSON.parse(guardado)
 
-    return Array.isArray(parsed) ? parsed : fallback
+    return Array.isArray(interpretado) ? interpretado : respaldo
   } catch {
-    return fallback
+    return respaldo
   }
 }
 
-function readStoredUser(key) {
+function leerUsuarioGuardado(clave) {
   try {
-    const stored =
-      localStorage.getItem(key) || sessionStorage.getItem(key)
+    const guardado =
+      localStorage.getItem(clave) || sessionStorage.getItem(clave)
 
-    if (!stored) return null
+    if (!guardado) return null
 
-    const parsed = JSON.parse(stored)
+    const interpretado = JSON.parse(guardado)
 
     if (
-      parsed &&
-      typeof parsed === 'object' &&
-      typeof parsed.id === 'string' &&
-      typeof parsed.token === 'string' &&
-      typeof parsed.name === 'string' &&
-      typeof parsed.email === 'string'
+      interpretado &&
+      typeof interpretado === 'object' &&
+      typeof interpretado.id === 'string' &&
+      typeof interpretado.token === 'string' &&
+      typeof interpretado.name === 'string' &&
+      typeof interpretado.email === 'string'
     ) {
-      return parsed
+      return interpretado
     }
 
     return null
@@ -70,222 +70,222 @@ function readStoredUser(key) {
   }
 }
 
-function App() {
-  const [storage, setStorage] = useState(getStorage)
-  const [user, setUser] = useState(() => readStoredUser(USER_KEY))
+function Aplicacion() {
+  const [almacenamiento, establecerAlmacenamiento] = useState(obtenerAlmacenamiento)
+  const [usuario, establecerUsuario] = useState(() => leerUsuarioGuardado(CLAVE_USUARIO))
 
-  const [matches, setMatches] = useState(() =>
-    readStoredArray(`${MATCHES_KEY}.${storage}`, storage === 'memory' ? initialMatches : []).filter((match) => validMatchDate(match.date))
+  const [partidos, establecerPartidos] = useState(() =>
+    leerListaGuardada(`${CLAVE_PARTIDOS}.${almacenamiento}`, almacenamiento === 'memory' ? partidosIniciales : []).filter((partido) => esFechaPartidoValida(partido.date))
   )
 
-  const [myMatchIds, setMyMatchIds] = useState(() =>
-    user ? readStoredArray(`${MY_MATCHES_KEY}.${storage}.${user.id}`, []) : []
+  const [idsMisPartidos, establecerIdsMisPartidos] = useState(() =>
+    usuario ? leerListaGuardada(`${CLAVE_MIS_PARTIDOS}.${almacenamiento}.${usuario.id}`, []) : []
   )
-  const [loadingRegistrations, setLoadingRegistrations] = useState(true)
+  const [cargandoInscripciones, establecerCargandoInscripciones] = useState(true)
 
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [editingMatch, setEditingMatch] = useState(null)
-  const [showActivityModal, setShowActivityModal] = useState(false)
-  const [alert, setAlert] = useState(null)
-  const [sportFilter, setSportFilter] = useState('Todos')
-  const [search, setSearch] = useState('')
+  const [mostrarFormularioPartido, establecerMostrarFormularioPartido] = useState(false)
+  const [partidoEnEdicion, establecerPartidoEnEdicion] = useState(null)
+  const [mostrarActividad, establecerMostrarActividad] = useState(false)
+  const [alerta, establecerAlerta] = useState(null)
+  const [filtroDeporte, establecerFiltroDeporte] = useState('Todos')
+  const [busqueda, establecerBusqueda] = useState('')
 
   useEffect(() => {
-    if (!user) return
-    let active = true
+    if (!usuario) return
+    let activo = true
 
-    Promise.all([fetchMatches(storage), fetchMyRegistrations(user.id, storage)])
-      .then(([list, ids]) => {
-        if (!active) return
-        setMatches(list)
-        setMyMatchIds(ids.filter((id) => list.some((match) => match.id === id)))
+    Promise.all([consultarPartidos(almacenamiento), consultarMisInscripciones(usuario.id, almacenamiento)])
+      .then(([lista, identificadores]) => {
+        if (!activo) return
+        establecerPartidos(lista)
+        establecerIdsMisPartidos(identificadores.filter((identificador) => lista.some((partido) => partido.id === identificador)))
       })
       .catch((error) => {
-        if (active) showError(error)
+        if (activo) mostrarError(error)
       })
       .finally(() => {
-        if (active) setLoadingRegistrations(false)
+        if (activo) establecerCargandoInscripciones(false)
       })
 
-    return () => { active = false }
-  }, [user, storage])
+    return () => { activo = false }
+  }, [usuario, almacenamiento])
 
   useEffect(() => {
-    if (user && !loadingRegistrations) {
-      localStorage.setItem(`${MATCHES_KEY}.${storage}`, JSON.stringify(matches))
-      localStorage.setItem(`${MY_MATCHES_KEY}.${storage}.${user.id}`, JSON.stringify(myMatchIds))
+    if (usuario && !cargandoInscripciones) {
+      localStorage.setItem(`${CLAVE_PARTIDOS}.${almacenamiento}`, JSON.stringify(partidos))
+      localStorage.setItem(`${CLAVE_MIS_PARTIDOS}.${almacenamiento}.${usuario.id}`, JSON.stringify(idsMisPartidos))
     }
-  }, [matches, myMatchIds, storage, user, loadingRegistrations])
+  }, [partidos, idsMisPartidos, almacenamiento, usuario, cargandoInscripciones])
 
-  const visibleMatches = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase('es')
+  const partidosVisibles = useMemo(() => {
+    const consulta = busqueda.trim().toLocaleLowerCase('es')
 
-    return matches.filter((match) => {
-      const matchesSport =
-        sportFilter === 'Todos' || match.sport === sportFilter
+    return partidos.filter((partido) => {
+      const coincideDeporte =
+        filtroDeporte === 'Todos' || partido.sport === filtroDeporte
 
-      const text =
-        `${match.sport} ${match.location} ${match.level}`.toLocaleLowerCase('es')
+      const texto =
+        `${partido.sport} ${partido.location} ${partido.level}`.toLocaleLowerCase('es')
 
-      return matchesSport && text.includes(query)
+      return coincideDeporte && texto.includes(consulta)
     })
-  }, [matches, sportFilter, search])
+  }, [partidos, filtroDeporte, busqueda])
 
-  const totalOpenMatches = matches.filter((m) => m.slots > 0).length
-  const totalSlotsAvailable = matches.reduce((sum, m) => sum + Number(m.slots || 0), 0)
-  const isAdmin = user?.role === 'admin'
-  const storageName = storage === 'memory' ? 'Memoria' : storage === 'mysql' ? 'MySQL' : 'MongoDB'
+  const totalPartidosConCupos = partidos.filter((partidoActual) => partidoActual.slots > 0).length
+  const totalCuposDisponibles = partidos.reduce((suma, partidoActual) => suma + Number(partidoActual.slots || 0), 0)
+  const esAdministrador = usuario?.role === 'admin'
+  const nombreAlmacenamiento = almacenamiento === 'memory' ? 'Memoria' : almacenamiento === 'mysql' ? 'MySQL' : 'MongoDB'
 
-  function isCurrentView() {
-    return getStorage() === storage && readStoredUser(USER_KEY)?.token === user?.token
+  function esVistaActual() {
+    return obtenerAlmacenamiento() === almacenamiento && leerUsuarioGuardado(CLAVE_USUARIO)?.token === usuario?.token
   }
 
-  function showError(error) {
+  function mostrarError(error) {
     if (error.status === 401) {
-      handleLogout()
+      manejarCierreSesion()
       return
     }
-    setAlert({ type: 'danger', message: error.message })
+    establecerAlerta({ type: 'danger', message: error.message })
   }
 
-  function handleStorageChange(nextStorage) {
-    if (nextStorage === storage) return
-    localStorage.setItem(STORAGE_KEY, nextStorage)
-    setLoadingRegistrations(true)
-    setMatches(readStoredArray(`${MATCHES_KEY}.${nextStorage}`, nextStorage === 'memory' ? initialMatches : []).filter((match) => validMatchDate(match.date)))
-    setMyMatchIds(readStoredArray(`${MY_MATCHES_KEY}.${nextStorage}.${user.id}`, []))
-    setShowCreateModal(false)
-    setEditingMatch(null)
-    setShowActivityModal(false)
-    setAlert(null)
-    setStorage(nextStorage)
+  function cambiarAlmacenamiento(siguienteAlmacenamiento) {
+    if (siguienteAlmacenamiento === almacenamiento) return
+    localStorage.setItem(CLAVE_ALMACENAMIENTO, siguienteAlmacenamiento)
+    establecerCargandoInscripciones(true)
+    establecerPartidos(leerListaGuardada(`${CLAVE_PARTIDOS}.${siguienteAlmacenamiento}`, siguienteAlmacenamiento === 'memory' ? partidosIniciales : []).filter((partido) => esFechaPartidoValida(partido.date)))
+    establecerIdsMisPartidos(leerListaGuardada(`${CLAVE_MIS_PARTIDOS}.${siguienteAlmacenamiento}.${usuario.id}`, []))
+    establecerMostrarFormularioPartido(false)
+    establecerPartidoEnEdicion(null)
+    establecerMostrarActividad(false)
+    establecerAlerta(null)
+    establecerAlmacenamiento(siguienteAlmacenamiento)
   }
 
-  function persistSession(sessionUser, rememberMe = true) {
-    const payload = JSON.stringify({
-      id: sessionUser.id,
-      name: sessionUser.name,
-      email: sessionUser.email,
-      role: sessionUser.role,
-      token: sessionUser.token
+  function guardarSesion(usuarioSesion, recordarSesion = true) {
+    const datosSesion = JSON.stringify({
+      id: usuarioSesion.id,
+      name: usuarioSesion.name,
+      email: usuarioSesion.email,
+      role: usuarioSesion.role,
+      token: usuarioSesion.token
     })
 
-    if (rememberMe) {
-      localStorage.setItem(USER_KEY, payload)
-      sessionStorage.removeItem(USER_KEY)
+    if (recordarSesion) {
+      localStorage.setItem(CLAVE_USUARIO, datosSesion)
+      sessionStorage.removeItem(CLAVE_USUARIO)
     } else {
-      sessionStorage.setItem(USER_KEY, payload)
-      localStorage.removeItem(USER_KEY)
+      sessionStorage.setItem(CLAVE_USUARIO, datosSesion)
+      localStorage.removeItem(CLAVE_USUARIO)
     }
   }
 
-  function handleLogin(matchedUser, rememberMe = true) {
-    const sessionUser = {
-      id: matchedUser.id,
-      name: matchedUser.name,
-      email: matchedUser.email,
-      role: matchedUser.role,
-      token: matchedUser.token
+  function manejarInicioSesion(usuarioEncontrado, recordarSesion = true) {
+    const usuarioSesion = {
+      id: usuarioEncontrado.id,
+      name: usuarioEncontrado.name,
+      email: usuarioEncontrado.email,
+      role: usuarioEncontrado.role,
+      token: usuarioEncontrado.token
     }
 
-    persistSession(sessionUser, rememberMe)
-    setMatches(readStoredArray(`${MATCHES_KEY}.${storage}`, storage === 'memory' ? initialMatches : []).filter((match) => validMatchDate(match.date)))
-    setMyMatchIds(readStoredArray(`${MY_MATCHES_KEY}.${storage}.${sessionUser.id}`, []))
-    setLoadingRegistrations(true)
-    setUser(sessionUser)
-    setAlert({
+    guardarSesion(usuarioSesion, recordarSesion)
+    establecerPartidos(leerListaGuardada(`${CLAVE_PARTIDOS}.${almacenamiento}`, almacenamiento === 'memory' ? partidosIniciales : []).filter((partido) => esFechaPartidoValida(partido.date)))
+    establecerIdsMisPartidos(leerListaGuardada(`${CLAVE_MIS_PARTIDOS}.${almacenamiento}.${usuarioSesion.id}`, []))
+    establecerCargandoInscripciones(true)
+    establecerUsuario(usuarioSesion)
+    establecerAlerta({
       type: 'success',
-      message: `¡Bienvenido de vuelta, ${matchedUser.name}!`
+      message: `¡Bienvenido de vuelta, ${usuarioEncontrado.name}!`
     })
   }
 
-  function handleRegister(newUser, rememberMe = true) {
-    handleLogin(newUser, rememberMe)
-    setAlert({
+  function manejarRegistro(nuevoUsuario, recordarSesion = true) {
+    manejarInicioSesion(nuevoUsuario, recordarSesion)
+    establecerAlerta({
       type: 'success',
-      message: `¡Cuenta creada con éxito! Bienvenido a FaltaUno, ${newUser.name}.`
+      message: `¡Cuenta creada con éxito! Bienvenido a FaltaUno, ${nuevoUsuario.name}.`
     })
   }
 
-  function handleLogout() {
-    logoutUser().catch(() => {})
-    localStorage.removeItem(USER_KEY)
-    sessionStorage.removeItem(USER_KEY)
-    setUser(null)
-    setMyMatchIds([])
-    setLoadingRegistrations(true)
-    setShowCreateModal(false)
-    setEditingMatch(null)
-    setShowActivityModal(false)
-    setAlert(null)
+  function manejarCierreSesion() {
+    cerrarSesionUsuario().catch(() => {})
+    localStorage.removeItem(CLAVE_USUARIO)
+    sessionStorage.removeItem(CLAVE_USUARIO)
+    establecerUsuario(null)
+    establecerIdsMisPartidos([])
+    establecerCargandoInscripciones(true)
+    establecerMostrarFormularioPartido(false)
+    establecerPartidoEnEdicion(null)
+    establecerMostrarActividad(false)
+    establecerAlerta(null)
   }
 
-  async function joinMatch(id) {
-    const match = matches.find((item) => item.id === id)
+  async function inscribirseEnPartido(identificador) {
+    const partido = partidos.find((elemento) => elemento.id === identificador)
 
-    if (!user || loadingRegistrations || !match || match.slots <= 0 || myMatchIds.includes(id)) return
+    if (!usuario || cargandoInscripciones || !partido || partido.slots <= 0 || idsMisPartidos.includes(identificador)) return
 
     try {
-      const { slots } = await joinMatchApi(id, user.id, user.email, storage)
-      if (!isCurrentView()) return
+      const { slots: cupos } = await inscribirseEnPartidoApi(identificador, usuario.id, usuario.email, almacenamiento)
+      if (!esVistaActual()) return
 
-      setMatches((current) =>
-        current.map((item) => item.id === id ? { ...item, slots } : item)
+      establecerPartidos((actual) =>
+        actual.map((elemento) => elemento.id === identificador ? { ...elemento, slots: cupos } : elemento)
       )
-      setMyMatchIds((current) => current.includes(id) ? current : [...current, id])
+      establecerIdsMisPartidos((actual) => actual.includes(identificador) ? actual : [...actual, identificador])
 
-      setAlert({
+      establecerAlerta({
         type: 'success',
-        message: `Te inscribiste en ${match.sport} en ${match.location}.`
+        message: `Te inscribiste en ${partido.sport} en ${partido.location}.`
       })
     } catch (error) {
-      if (isCurrentView()) showError(error)
+      if (esVistaActual()) mostrarError(error)
     }
   }
 
-  async function cancelMatch(id) {
-    const match = matches.find((item) => item.id === id)
+  async function cancelarInscripcion(identificador) {
+    const partido = partidos.find((elemento) => elemento.id === identificador)
 
-    if (!user || loadingRegistrations || !match || !myMatchIds.includes(id)) return
+    if (!usuario || cargandoInscripciones || !partido || !idsMisPartidos.includes(identificador)) return
 
     try {
-      const { slots } = await leaveMatchApi(id, user.id, user.email, storage)
-      if (!isCurrentView()) return
+      const { slots: cupos } = await cancelarInscripcionPartidoApi(identificador, usuario.id, usuario.email, almacenamiento)
+      if (!esVistaActual()) return
 
-      setMatches((current) =>
-        current.map((item) => item.id === id ? { ...item, slots } : item)
+      establecerPartidos((actual) =>
+        actual.map((elemento) => elemento.id === identificador ? { ...elemento, slots: cupos } : elemento)
       )
-      setMyMatchIds((current) => current.filter((matchId) => matchId !== id))
+      establecerIdsMisPartidos((actual) => actual.filter((idPartido) => idPartido !== identificador))
 
-      setAlert({
+      establecerAlerta({
         type: 'warning',
         message: 'Cancelaste tu inscripción. El cupo quedó disponible.'
       })
     } catch (error) {
-      if (isCurrentView()) showError(error)
+      if (esVistaActual()) mostrarError(error)
     }
   }
 
-  async function saveMatch(values) {
-    if (!isAdmin || loadingRegistrations) return
-    if (editingMatch) {
+  async function guardarPartido(valores) {
+    if (!esAdministrador || cargandoInscripciones) return
+    if (partidoEnEdicion) {
       try {
-        const updated = await updateMatchApi(editingMatch.id, {
-          ...values,
-          userEmail: user.email
-        }, storage)
-        if (!isCurrentView()) return
-        setMatches((current) =>
-          current.map((item) => (item.id === editingMatch.id ? updated : item))
+        const actualizado = await actualizarPartidoApi(partidoEnEdicion.id, {
+          ...valores,
+          userEmail: usuario.email
+        }, almacenamiento)
+        if (!esVistaActual()) return
+        establecerPartidos((actual) =>
+          actual.map((elemento) => (elemento.id === partidoEnEdicion.id ? actualizado : elemento))
         )
       } catch (error) {
-        if (isCurrentView()) showError(error)
+        if (esVistaActual()) mostrarError(error)
         return
       }
 
-      setEditingMatch(null)
-      setShowCreateModal(false)
-      setAlert({
+      establecerPartidoEnEdicion(null)
+      establecerMostrarFormularioPartido(false)
+      establecerAlerta({
         type: 'success',
         message: 'Partido actualizado correctamente.'
       })
@@ -293,104 +293,104 @@ function App() {
     }
 
     try {
-      const created = await createMatchApi({
-        ...values,
-        organizerId: user.id,
-        userEmail: user.email
-      }, storage)
-      if (!isCurrentView()) return
-      setMatches((current) => [created, ...current])
+      const creado = await crearPartidoApi({
+        ...valores,
+        organizerId: usuario.id,
+        userEmail: usuario.email
+      }, almacenamiento)
+      if (!esVistaActual()) return
+      establecerPartidos((actual) => [creado, ...actual])
     } catch (error) {
-      if (isCurrentView()) showError(error)
+      if (esVistaActual()) mostrarError(error)
       return
     }
 
-    setShowCreateModal(false)
-    setAlert({
+    establecerMostrarFormularioPartido(false)
+    establecerAlerta({
       type: 'success',
       message: 'Partido publicado. Ya aparece en la lista.'
     })
   }
 
-  function handleOpenEdit(match) {
-    if (!isAdmin || loadingRegistrations) return
-    setAlert(null)
-    setEditingMatch(match)
-    setShowCreateModal(true)
+  function abrirEdicion(partido) {
+    if (!esAdministrador || cargandoInscripciones) return
+    establecerAlerta(null)
+    establecerPartidoEnEdicion(partido)
+    establecerMostrarFormularioPartido(true)
   }
 
-  async function handleDeleteMatch(id) {
-    if (!isAdmin || loadingRegistrations) return
+  async function manejarEliminarPartido(identificador) {
+    if (!esAdministrador || cargandoInscripciones) return
     try {
-      await deleteMatchApi(id, storage)
-      if (!isCurrentView()) return
+      await eliminarPartidoApi(identificador, almacenamiento)
+      if (!esVistaActual()) return
     } catch (error) {
-      if (isCurrentView()) showError(error)
+      if (esVistaActual()) mostrarError(error)
       return
     }
 
-    setMatches((current) => current.filter((item) => item.id !== id))
-    setMyMatchIds((current) => current.filter((matchId) => matchId !== id))
-    setAlert({
+    establecerPartidos((actual) => actual.filter((elemento) => elemento.id !== identificador))
+    establecerIdsMisPartidos((actual) => actual.filter((idPartido) => idPartido !== identificador))
+    establecerAlerta({
       type: 'warning',
       message: 'El partido fue eliminado de la lista.'
     })
   }
 
-  if (!user) {
+  if (!usuario) {
     return (
-      <Login
-        onLogin={handleLogin}
-        onRegister={handleRegister}
+      <Acceso
+        onLogin={manejarInicioSesion}
+        onRegister={manejarRegistro}
       />
     )
   }
 
   return (
     <div className="app-page min-vh-100 d-flex flex-column">
-      <Navbar
-        user={user}
-        storage={storage}
-        onStorageChange={handleStorageChange}
-        myMatchesCount={myMatchIds.length}
+      <BarraNavegacion
+        user={usuario}
+        storage={almacenamiento}
+        onStorageChange={cambiarAlmacenamiento}
+        myMatchesCount={idsMisPartidos.length}
         onCreateMatch={() => {
-          if (!isAdmin || loadingRegistrations) return
-          setAlert(null)
-          setEditingMatch(null)
-          setShowCreateModal(true)
+          if (!esAdministrador || cargandoInscripciones) return
+          establecerAlerta(null)
+          establecerPartidoEnEdicion(null)
+          establecerMostrarFormularioPartido(true)
         }}
-        onOpenProfile={() => setShowActivityModal(true)}
-        onLogout={handleLogout}
+        onOpenProfile={() => establecerMostrarActividad(true)}
+        onLogout={manejarCierreSesion}
       />
 
       <main id="inicio" className="container py-4 py-lg-5 flex-grow-1">
-        <Hero />
-        <p className="small text-secondary" role="status">{loadingRegistrations ? 'Cargando partidos e inscripciones...' : `Mostrando partidos e inscripciones de ${storageName}.`}</p>
+        <Presentacion />
+        <p className="small text-secondary" role="status">{cargandoInscripciones ? 'Cargando partidos e inscripciones...' : `Mostrando partidos e inscripciones de ${nombreAlmacenamiento}.`}</p>
 
         <div className="row g-3 mb-4">
           <div className="col-12 col-sm-4">
             <div className="card match-card p-3 text-center">
               <span className="small text-secondary">Partidos publicados</span>
-              <strong className="h4 fw-bold text-success mb-0">{matches.length}</strong>
+              <strong className="h4 fw-bold text-success mb-0">{partidos.length}</strong>
             </div>
           </div>
           <div className="col-12 col-sm-4">
             <div className="card match-card p-3 text-center">
               <span className="small text-secondary">Partidos con cupos</span>
-              <strong className="h4 fw-bold text-success mb-0">{totalOpenMatches}</strong>
+              <strong className="h4 fw-bold text-success mb-0">{totalPartidosConCupos}</strong>
             </div>
           </div>
           <div className="col-12 col-sm-4">
             <div className="card match-card p-3 text-center">
               <span className="small text-secondary">Cupos disponibles</span>
-              <strong className="h4 fw-bold text-success mb-0">{totalSlotsAvailable}</strong>
+              <strong className="h4 fw-bold text-success mb-0">{totalCuposDisponibles}</strong>
             </div>
           </div>
         </div>
 
-        <AlertMessage
-          alert={alert}
-          onClose={() => setAlert(null)}
+        <MensajeAlerta
+          alert={alerta}
+          onClose={() => establecerAlerta(null)}
         />
 
         <div className="row g-4" id="partidos">
@@ -409,62 +409,62 @@ function App() {
                 </h2>
               </div>
 
-              <SearchBar
-                search={search}
-                onSearchChange={setSearch}
+              <BuscadorPartidos
+                search={busqueda}
+                onSearchChange={establecerBusqueda}
               />
             </div>
 
-            <FilterBar
-              sportFilter={sportFilter}
-              onFilterChange={setSportFilter}
+            <FiltroDeportes
+              sportFilter={filtroDeporte}
+              onFilterChange={establecerFiltroDeporte}
             />
-            <MatchList
-              matches={visibleMatches}
-              myMatchIds={myMatchIds}
-              isAdmin={isAdmin}
-              loading={loadingRegistrations}
-              onJoin={joinMatch}
-              onCancel={cancelMatch}
-              onEdit={handleOpenEdit}
-              onDelete={handleDeleteMatch}
+            <ListaPartidos
+              matches={partidosVisibles}
+              myMatchIds={idsMisPartidos}
+              isAdmin={esAdministrador}
+              loading={cargandoInscripciones}
+              onJoin={inscribirseEnPartido}
+              onCancel={cancelarInscripcion}
+              onEdit={abrirEdicion}
+              onDelete={manejarEliminarPartido}
             />
           </section>
 
           <aside className="col-12 col-lg-4" id="mis-partidos">
-            <MyMatchesPanel
-              matches={matches}
-              myMatchIds={myMatchIds}
-              onCancel={cancelMatch}
-              loading={loadingRegistrations}
+            <PanelMisPartidos
+              matches={partidos}
+              myMatchIds={idsMisPartidos}
+              onCancel={cancelarInscripcion}
+              loading={cargandoInscripciones}
             />
           </aside>
         </div>
       </main>
 
-      <Footer />
+      <PieDePagina />
 
-      {showCreateModal && (
-        <CreateMatchModal
-          editingMatch={editingMatch}
-          onSubmit={saveMatch}
-          errorMessage={alert?.type === 'danger' ? alert.message : ''}
+      {mostrarFormularioPartido && (
+        <FormularioPartido
+          editingMatch={partidoEnEdicion}
+          onSubmit={guardarPartido}
+          errorMessage={alerta?.type === 'danger' ? alerta.message : ''}
           onClose={() => {
-            setEditingMatch(null)
-            setShowCreateModal(false)
+            establecerPartidoEnEdicion(null)
+            establecerMostrarFormularioPartido(false)
           }}
         />
       )}
 
-      {showActivityModal && (
-        <ActivityModal
-          user={user}
-          storage={storage}
-          onClose={() => setShowActivityModal(false)}
+      {mostrarActividad && (
+        <ModalActividad
+          user={usuario}
+          storage={almacenamiento}
+          onClose={() => establecerMostrarActividad(false)}
         />
       )}
     </div>
   )
 }
 
-export default App
+export default Aplicacion

@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react'
-import { fetchLogs } from '../services/api.js'
+import { consultarActividad } from '../services/api.js'
 
-function ActivityModal({ user, storage, onClose }) {
-    const [logs, setLogs] = useState([])
-    const [loading, setLoading] = useState(true)
+function ModalActividad({ user: usuario, storage: almacenamiento, onClose: alCerrar }) {
+    const [registrosActividad, establecerActividad] = useState([])
+    const [cargando, establecerCargando] = useState(true)
 
     useEffect(() => {
-        fetchLogs(storage)
-            .then((data) => setLogs(data))
-            .catch(() => setLogs([]))
-            .finally(() => setLoading(false))
-    }, [storage])
+        consultarActividad(almacenamiento)
+            .then((datos) => establecerActividad(datos))
+            .catch(() => establecerActividad([]))
+            .finally(() => establecerCargando(false))
+    }, [almacenamiento])
 
     return (
         <div
             className="modal-backdrop-custom"
             role="presentation"
-            onMouseDown={(event) => {
-                if (event.target === event.currentTarget) onClose()
+            onMouseDown={(evento) => {
+                if (evento.target === evento.currentTarget) alCerrar()
             }}
         >
             <section
@@ -28,37 +28,37 @@ function ActivityModal({ user, storage, onClose }) {
             >
                 <div className="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <p className="eyebrow mb-1">Mi cuenta ({user.email})</p>
+                        <p className="eyebrow mb-1">Mi cuenta ({usuario.email})</p>
                         <h2 className="h4 fw-bold mb-0" id="activity-title">
-                            Actividad reciente · {storage === 'memory' ? 'Memoria' : storage === 'mysql' ? 'MySQL' : 'MongoDB'}
+                            Actividad reciente · {almacenamiento === 'memory' ? 'Memoria' : almacenamiento === 'mysql' ? 'MySQL' : 'MongoDB'}
                         </h2>
                     </div>
                     <button
                         type="button"
                         className="btn-close"
                         aria-label="Cerrar"
-                        onClick={onClose}
+                        onClick={alCerrar}
                     />
                 </div>
 
-                {loading ? (
+                {cargando ? (
                     <p className="text-secondary small">Cargando registros...</p>
-                ) : logs.length === 0 ? (
+                ) : registrosActividad.length === 0 ? (
                     <div className="empty-state py-4">
                         <p className="small mb-0">Aún no hay actividad registrada.</p>
                     </div>
                 ) : (
                     <ul className="list-unstyled d-grid gap-2 mb-0 profile-logs-list">
-                        {logs.map((item, index) => (
-                            <li key={item._id || index} className="my-match-item py-2 px-3">
+                        {registrosActividad.map((elemento, indice) => (
+                            <li key={elemento._id || indice} className="my-match-item py-2 px-3">
                                 <div className="d-flex justify-content-between align-items-center mb-1">
-                                    <span className="badge text-bg-success">{item.action}</span>
+                                    <span className="badge text-bg-success">{elemento.action}</span>
                                     <small className="text-secondary">
-                                        {new Date(item.date).toLocaleString('es-CL')}
+                                        {new Date(elemento.date).toLocaleString('es-CL')}
                                     </small>
                                 </div>
-                                <p className="small mb-0">{item.detail}</p>
-                                <small className="text-secondary">{item.userEmail}</small>
+                                <p className="small mb-0">{elemento.detail}</p>
+                                <small className="text-secondary">{elemento.userEmail}</small>
                             </li>
                         ))}
                     </ul>
@@ -68,5 +68,5 @@ function ActivityModal({ user, storage, onClose }) {
     )
 }
 
-export default ActivityModal
+export default ModalActividad
 

@@ -1,4 +1,4 @@
-function Footer() {
+function PieDePagina() {
     return (
         <footer className="container py-4 border-top text-secondary small d-flex flex-wrap justify-content-between gap-2">
             <span>© 2026 FaltaUno</span>
@@ -7,4 +7,4 @@ function Footer() {
     )
 }
 
-export default Footer
+export default PieDePagina

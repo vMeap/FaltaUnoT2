@@ -1,19 +1,19 @@
-const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
+const URL_PRONOSTICO = 'https://api.open-meteo.com/v1/forecast'
 
-const HOURLY_VARIABLES = [
+const VARIABLES_POR_HORA = [
   'temperature_2m',
   'precipitation_probability',
   'weather_code',
   'wind_speed_10m',
 ]
 
-export const MAX_FORECAST_DAYS = 16
+export const DIAS_MAXIMOS_PRONOSTICO = 16
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const TIME_PATTERN = /^\d{2}:\d{2}/
+const MILISEGUNDOS_POR_DIA = 24 * 60 * 60 * 1000
+const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/
+const PATRON_HORA = /^\d{2}:\d{2}/
 
-const WEATHER_CODES = {
+const CODIGOS_CLIMA = {
   0: 'Despejado',
   1: 'Mayormente despejado',
   2: 'Parcialmente nublado',
@@ -45,70 +45,70 @@ const WEATHER_CODES = {
   99: 'Tormenta con granizo intenso',
 }
 
-const UNKNOWN_CONDITION = 'Condición desconocida'
+const CONDICION_DESCONOCIDA = 'Condición desconocida'
 
-const cache = new Map()
+const resultadosGuardados = new Map()
 
-function isCoordinate(value) {
-  return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
+function esCoordenada(valor) {
+  return valor !== null && valor !== undefined && valor !== '' && Number.isFinite(Number(valor))
 }
 
-export function hasCoordinates(latitude, longitude) {
-  return isCoordinate(latitude) && isCoordinate(longitude)
+export function tieneCoordenadas(latitud, longitud) {
+  return esCoordenada(latitud) && esCoordenada(longitud)
 }
 
-export function getForecastAvailability(date, time, today = new Date()) {
-  if (!DATE_PATTERN.test(date ?? '') || !TIME_PATTERN.test(time ?? '')) return 'invalid'
+export function obtenerDisponibilidadPronostico(fecha, hora, hoy = new Date()) {
+  if (!PATRON_FECHA.test(fecha ?? '') || !PATRON_HORA.test(hora ?? '')) return 'invalid'
 
-  const matchDay = new Date(`${date}T00:00`)
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const daysAhead = Math.round((matchDay - todayStart) / MS_PER_DAY)
+  const diaPartido = new Date(`${fecha}T00:00`)
+  const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+  const diasRestantes = Math.round((diaPartido - inicioHoy) / MILISEGUNDOS_POR_DIA)
 
-  if (Number.isNaN(daysAhead)) return 'invalid'
-  if (daysAhead < 0) return 'past'
-  if (daysAhead >= MAX_FORECAST_DAYS) return 'too-far'
+  if (Number.isNaN(diasRestantes)) return 'invalid'
+  if (diasRestantes < 0) return 'past'
+  if (diasRestantes >= DIAS_MAXIMOS_PRONOSTICO) return 'too-far'
   return 'available'
 }
 
-export function toMatchWeather(data, date, time) {
-  const hourly = data?.hourly
-  if (!hourly?.time) return null
+export function convertirClimaPartido(datos, fecha, hora) {
+  const datosPorHora = datos?.hourly
+  if (!datosPorHora?.time) return null
 
-  const targetHour = `${date}T${time.slice(0, 2)}:00`
-  const index = hourly.time.indexOf(targetHour)
-  if (index === -1 || hourly.temperature_2m?.[index] == null) return null
+  const horaBuscada = `${fecha}T${hora.slice(0, 2)}:00`
+  const indice = datosPorHora.time.indexOf(horaBuscada)
+  if (indice === -1 || datosPorHora.temperature_2m?.[indice] == null) return null
 
-  const windSpeed = hourly.wind_speed_10m?.[index]
+  const velocidadViento = datosPorHora.wind_speed_10m?.[indice]
 
   return {
-    temperature: Math.round(hourly.temperature_2m[index]),
-    precipitationProbability: hourly.precipitation_probability?.[index] ?? null,
-    windSpeed: windSpeed == null ? null : Math.round(windSpeed),
-    description: WEATHER_CODES[hourly.weather_code?.[index]] ?? UNKNOWN_CONDITION,
+    temperature: Math.round(datosPorHora.temperature_2m[indice]),
+    precipitationProbability: datosPorHora.precipitation_probability?.[indice] ?? null,
+    windSpeed: velocidadViento == null ? null : Math.round(velocidadViento),
+    description: CODIGOS_CLIMA[datosPorHora.weather_code?.[indice]] ?? CONDICION_DESCONOCIDA,
   }
 }
 
-export async function fetchMatchWeather({ latitude, longitude, date, time }, { signal } = {}) {
-  const cacheKey = `${latitude},${longitude},${date},${time.slice(0, 2)}`
-  if (cache.has(cacheKey)) return cache.get(cacheKey)
+export async function consultarClimaPartido({ latitude: latitud, longitude: longitud, date: fecha, time: hora }, { signal: senal } = {}) {
+  const claveResultado = `${latitud},${longitud},${fecha},${hora.slice(0, 2)}`
+  if (resultadosGuardados.has(claveResultado)) return resultadosGuardados.get(claveResultado)
 
-  const params = new URLSearchParams({
-    latitude,
-    longitude,
-    hourly: HOURLY_VARIABLES.join(','),
+  const parametros = new URLSearchParams({
+    latitude: latitud,
+    longitude: longitud,
+    hourly: VARIABLES_POR_HORA.join(','),
     timezone: 'auto',
-    start_date: date,
-    end_date: date,
+    start_date: fecha,
+    end_date: fecha,
   })
 
-  const response = await fetch(`${FORECAST_URL}?${params}`, { signal })
+  const respuesta = await fetch(`${URL_PRONOSTICO}?${parametros}`, { signal: senal })
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => null)
-    throw new Error(`Open-Meteo: ${body?.reason ?? `error HTTP ${response.status}`}`)
+  if (!respuesta.ok) {
+    const cuerpo = await respuesta.json().catch(() => null)
+    throw new Error(`Open-Meteo: ${cuerpo?.reason ?? `error HTTP ${respuesta.status}`}`)
   }
 
-  const weather = toMatchWeather(await response.json(), date, time)
-  cache.set(cacheKey, weather)
-  return weather
+  const clima = convertirClimaPartido(await respuesta.json(), fecha, hora)
+  resultadosGuardados.set(claveResultado, clima)
+  return clima
 }
