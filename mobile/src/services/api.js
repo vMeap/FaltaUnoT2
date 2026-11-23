@@ -56,3 +56,33 @@ export function cerrarSesionUsuario(token, almacenamiento = 'mysql') {
 export function consultarPartidos(almacenamiento = 'mysql', token = '') {
     return realizarSolicitud('/matches', { method: 'GET' }, almacenamiento, token)
 }
+
+export function consultarMisInscripciones(idUsuario, almacenamiento = 'mysql', token = '') {
+    return realizarSolicitud(
+        `/registrations?userId=${encodeURIComponent(idUsuario)}`,
+        { method: 'GET' },
+        almacenamiento,
+        token
+    )
+}
+
+export function inscribirseEnPartidoApi(idPartido, idUsuario, correoUsuario, almacenamiento = 'mysql', token = '') {
+    return realizarSolicitud(
+        '/registrations',
+        {
+            method: 'POST',
+            body: JSON.stringify({ matchId: idPartido, userId: idUsuario, userEmail: correoUsuario })
+        },
+        almacenamiento,
+        token
+    )
+}
+
+export function cancelarInscripcionPartidoApi(idPartido, idUsuario, correoUsuario, almacenamiento = 'mysql', token = '') {
+    return realizarSolicitud(
+        `/registrations/${encodeURIComponent(idPartido)}?userId=${encodeURIComponent(idUsuario)}&userEmail=${encodeURIComponent(correoUsuario)}`,
+        { method: 'DELETE' },
+        almacenamiento,
+        token
+    )
+}

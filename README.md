@@ -411,3 +411,55 @@ Para verificar el frontend, ejecutar desde la raíz:
 npm run lint
 npm run build
 ```
+
+## Evolución Hito 4 — Aplicación Móvil con React Native (Expo)
+
+La carpeta `mobile/` contiene la versión móvil de FaltaUno, construida con React Native y Expo. Consume el mismo backend del Hito 3, por lo que comparte usuarios, partidos, inscripciones y el selector de almacenamiento (MySQL, MongoDB o Memoria).
+
+### 1. Instalación y ejecución
+
+Primero se debe tener el backend encendido (`npm run dev:backend` desde la raíz). Luego:
+
+```bash
+cd mobile
+npm install
+npm start        # abre Expo (QR para Expo Go)
+npm run web      # ejecuta la app en el navegador
+npm run android  # ejecuta la app en un emulador Android
+```
+
+### 2. Dirección base de la API
+
+La app usa la variable `EXPO_PUBLIC_API_URL`. Si no se define, usa `http://localhost:4000/api`. Se puede crear un archivo `mobile/.env` con el valor que corresponda:
+
+| Dónde se ejecuta | Valor de `EXPO_PUBLIC_API_URL` |
+| :--- | :--- |
+| Navegador (`npm run web`) | `http://localhost:4000/api` |
+| Emulador Android | `http://10.0.2.2:4000/api` |
+| Dispositivo físico con Expo Go | `http://<IP_LOCAL>:4000/api` (IP del computador en la misma red Wi-Fi) |
+
+Después de cambiar la variable se debe reiniciar Expo.
+
+### 3. Pantallas y flujos
+
+- **PantallaAcceso**: inicio de sesión y registro de cuentas nuevas.
+- **PantallaPartidos**: cartelera con indicadores (publicados, con cupos y cupos libres), buscador y filtros por deporte. Cada tarjeta indica si el usuario ya está inscrito.
+- **PantallaDetalle**: datos completos del partido, cupos, estado de la inscripción y pronóstico del clima (Open-Meteo). Desde aquí se usa "Yo apaño (Inscribirme)" o "Dar de baja mi inscripción".
+- **PantallaMisPartidos**: lista de inscripciones propias con los botones "Ver comprobante", "Ver detalle" y "Dar de baja". Si no hay inscripciones muestra un mensaje vacío.
+- **ModalComprobante**: comprobante de inscripción con folio, datos del jugador, datos del evento y base de datos utilizada.
+
+La barra inferior permite cambiar entre "Explorar partidos" y "Mis inscripciones". Al inscribirse o darse de baja se espera la respuesta del backend, se actualizan los cupos y se muestra un aviso de confirmación o el error recibido.
+
+### 4. Endpoints del Hito 3 utilizados
+
+| Método | Ruta | Uso en la app móvil |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | Iniciar sesión |
+| `POST` | `/api/auth/register` | Registrar una cuenta |
+| `POST` | `/api/auth/logout` | Cerrar sesión |
+| `GET` | `/api/matches` | Cargar la cartelera de partidos |
+| `GET` | `/api/registrations?userId=...` | Cargar las inscripciones del usuario |
+| `POST` | `/api/registrations` | Inscribirse en un partido ("Yo apaño") |
+| `DELETE` | `/api/registrations/:matchId?userId=...&userEmail=...` | Darse de baja de un partido |
+
+Todas las solicitudes envían `storage` y el token de sesión en el encabezado `Authorization`.
